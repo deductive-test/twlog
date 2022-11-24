@@ -323,7 +323,7 @@
 					this.loading = true
 					let res = []
 					this.twDataShow =[]
-					this.page.no = isPageAdd ? this.page.no : 1
+					this.page.no = isPageAdd === true ? this.page.no : 1
 					try {
 						res = JSON.parse(JSON.stringify(this.twData))
 
