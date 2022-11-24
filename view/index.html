@@ -43,22 +43,45 @@
 					</v-row>
 
 					<!-- search -->
-					<v-row v-if="twData && twData.length > 0" class="aic">
-						<!-- TODO -->
-						<!-- <v-col class="pr-0">
-							<v-switch v-model="input.showDesc" :label="input.showDesc ? 'desc' : 'asc'" class="mt-0" dense small hide-details></v-switch>
-						</v-col> -->
-						<v-col :cols="$vuetify.breakpoint.xs ? 6 : 8">
-							<v-text-field v-model="input.keyword" label="keyword" dense outlined hide-details clearable></v-text-field>
-						</v-col>
-						<v-col class="pl-0">
-							<v-text-field v-model.number="input.rt" label="RT" dense outlined hide-details></v-text-field>
-						</v-col>
-						<v-col class="pl-0">
-							<v-text-field v-model.number="input.like" label="Like" dense outlined hide-details></v-text-field>
-						</v-col>
-						<v-col cols="12" class="pt-0"><v-btn block @click="search">Search</v-btn></v-col>
-					</v-row>
+					<template v-if="twData && twData.length > 0">
+						<v-row class="aic">
+
+							<!-- keyword -->
+							<v-col cols="12">
+								<v-text-field v-model="input.keyword" label="keyword" dense outlined hide-details clearable></v-text-field>
+							</v-col>
+
+							<!-- RT -->
+							<v-col class="pt-0">
+								<v-text-field v-model.number="input.rt" label="RT" dense outlined hide-details clearable min="0"></v-text-field>
+							</v-col>
+
+							<!-- Like -->
+							<v-col class="pt-0 pl-0">
+								<v-text-field v-model.number="input.like" label="Like" dense outlined hide-details clearable min="0"></v-text-field>
+							</v-col>
+
+							<!-- sort -->
+							<v-col class="pt-0 pl-0 aic" cols="auto">
+								<v-switch v-model="input.showDesc" :label="input.showDesc ? 'desc' : 'asc'" class="ma-0 pa-0" dense small hide-details></v-switch>
+							</v-col>
+
+						</v-row>
+						<v-row>
+							<!-- date from -->
+							<v-col class="pt-0" cols="6">
+								<v-text-field v-model="input.from" type="date" dense outlined hide-details label="from" clearable></v-text-field>
+							</v-col>
+
+							<!-- date to -->
+							<v-col class="pt-0 pl-0" cols="6">
+								<v-text-field v-model="input.to" type="date" dense outlined hide-details label="to" clearable></v-text-field>
+							</v-col>
+
+							<v-col cols="12" class="pt-0"><v-btn block @click="search">Search</v-btn></v-col>
+						</v-row>
+
+					</template>
 
 					<!-- count -->
 					<v-row v-if="twData && twData.length > 0" dense class="text-caption">
@@ -187,16 +210,6 @@
 				'my-loading':httpVueLoader(`${common.URL.BASE}components/loading.vue?_=${(new Date()).getTime()}`),
 			},
 			computed: {
-				// twDataShowPage(){
-				// 	let res = []
-				// 	try {
-				// 		if (this.twDataShow && this.twDataShow.length > 0) {
-				// 			const dp = JSON.parse(JSON.stringify(this.twDataShow))
-				// 			res = dp.slice(0, this.page.no * this.page.max < this.twDataShow.length ? this.page.no * this.page.max : this.twDataShow.length)
-				// 		}
-				// 	} catch (e) {console.error(e)}
-				// 	return res
-				// },
 			},
 			data() {
 				return {
@@ -209,10 +222,18 @@
 						keyword:'',
 						rt:0,
 						like:0,
+						from:'',
+						to:'',
 					},
 					
 					selectDate:[
-						'2022-11-20',
+						{
+							text:'2022-04-12 ~ 2022-11-20',
+							value:'2022-11-20',
+							data:{
+								isTweet:false,
+							},
+						},
 					],
 					twData:[],
 					twDataShow:[],
@@ -234,8 +255,6 @@
 			mounted(){
 				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [index] mounted`)
 				this.loading = false
-				// this.input.target = this.selectDate[0]
-				// this.LoadData()
 			}, // mounted
 			methods: {
 				LoadData(){
@@ -249,7 +268,7 @@
 					this.page.no = 1
 					this.page.searched = 0
 					this.zjax({
-						url: this.NullOrWhiteSpace(this.input.free) ? `${this.common.URL.BASE}tw/${this.input.target}/data/tweets.js` : this.input.free,
+						url: this.NullOrWhiteSpace(this.input.free) ? `${this.common.URL.TWDATA}${this.input.target}/data/tweets.js` : this.input.free,
 						dataType : 'text',
 					},
 					done=>{
@@ -344,16 +363,26 @@
 							res = res.filter(x => this.input.like <= x.favorite_count)
 						}
 
-						// TODO
-						// res = res.sort((a,b)=> this.input.showDesc
-						// 	? a.created_at > b.created_at ? -1 : 1
-						// 	: a.created_at > b.created_at ? 1 : 1
-						// )
+						if(!this.NullOrWhiteSpace(this.input.from) && this.isDate(this.input.from.replace('-','/'))){
+							const df = new Date(this.input.from.replace('-','/'))
+							res = res.filter(x => df <= new Date(x.created_at))
+						}
+
+						if(!this.NullOrWhiteSpace(this.input.to) && this.isDate(this.input.to.replace('-','/'))){
+							let dt = new Date(this.input.to.replace('-','/'))
+							dt.setDate(dt.getDate() + 1)
+							res = res.filter(x => new Date(x.created_at) < dt)
+						}
+
+						res = res.sort((a,b)=> this.input.showDesc === true
+							? a.created_at > b.created_at ? -1 : 1
+							: a.created_at > b.created_at ? 1 : -1
+						)
 
 					} catch (e) {console.error(e)}
-					this.loading = false
 					this.twDataShow = res.slice(0, this.page.no * this.page.max < res.length ? this.page.no * this.page.max : res.length)
 					this.page.searched = res.length
+					this.loading = false
 				}, // search
 
 				showMore(){

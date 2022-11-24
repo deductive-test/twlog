@@ -6,8 +6,11 @@ common.URL = {
 }
 
 common.URL.BASE = url.origin + '/'
+common.URL.TWDATA = common.URL.BASE + 'tw/'
+
 if (common.URL.href.includes('github.io')) {
 	common.URL.BASE += common.URL.href.includes('-test') ? 'twlog/' : 'dt/'
+	common.URL.TWDATA = common.URL.href.includes('-test') ? 'https://deductive-test.github.io/twdata/' : common.URL.BASE + 'tw/'
 }
 
 const myMixins = {
@@ -23,6 +26,15 @@ const myMixins = {
 			}, // common
 		}
 	}, // data
+	computed: {
+		VuetifyBreakPoint(){
+			let res = ''
+			try {
+				res = this.$vuetify.breakpoint.name
+			} catch (e) {console.error(e)}
+			return res
+		},
+	},
 	mounted() {
 		console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [myMixins] mounted`)
 
@@ -124,6 +136,14 @@ const myMixins = {
 		// date --------------------------------------------------
 		FormatDate (d = new Date(), f = '/', time = false, day = false) {
 			return `${d.getFullYear()}${f}${(d.getMonth() + 1).toString().padStart(2, '0')}${f}${d.getDate().toString().padStart(2, '0')}${day ? `(${this.common.day[d.getDay()]})` : ''}${time ? ` ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}` : ''}`
+		},
+
+		isDate (v) {
+			let res = false
+			try {
+				res = !isNaN(new Date(v).getTime())
+			} catch (e) {console.error(e)}
+			return res
 		},
 
 		// string --------------------------------------------------
