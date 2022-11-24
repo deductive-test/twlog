@@ -263,10 +263,17 @@
 						return
 					}
 
-					this.loading = true
 					this.twData = []
+					this.twDataShow = []
 					this.page.no = 1
 					this.page.searched = 0
+
+					if (this.NullOrWhiteSpace(this.input.target)) {
+						console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadData] no target`)
+						return
+					}
+
+					this.loading = true
 					this.zjax({
 						url: this.NullOrWhiteSpace(this.input.free) ? `${this.common.URL.TWDATA}${this.input.target}/data/tweets.js` : this.input.free,
 						dataType : 'text',
@@ -363,13 +370,13 @@
 							res = res.filter(x => this.input.like <= x.favorite_count)
 						}
 
-						if(!this.NullOrWhiteSpace(this.input.from) && this.isDate(this.input.from.replace('-','/'))){
-							const df = new Date(this.input.from.replace('-','/'))
+						if(!this.NullOrWhiteSpace(this.input.from) && this.isDate(this.input.from.split('-').join('/'))){
+							const df = new Date(this.input.from.split('-').join('/'))
 							res = res.filter(x => df <= new Date(x.created_at))
 						}
 
-						if(!this.NullOrWhiteSpace(this.input.to) && this.isDate(this.input.to.replace('-','/'))){
-							let dt = new Date(this.input.to.replace('-','/'))
+						if(!this.NullOrWhiteSpace(this.input.to) && this.isDate(this.input.to.split('-').join('/'))){
+							let dt = new Date(this.input.to.split('-').join('/'))
 							dt.setDate(dt.getDate() + 1)
 							res = res.filter(x => new Date(x.created_at) < dt)
 						}
