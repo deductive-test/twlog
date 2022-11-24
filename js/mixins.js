@@ -4,7 +4,11 @@ common.URL = {
 	href: location.href,
 	query: Object.fromEntries(url.searchParams),
 }
-common.URL.BASE = url.origin + '/' + (common.URL.href.includes('github.io') ? 'dt/' : '')
+
+common.URL.BASE = url.origin + '/'
+if (common.URL.href.includes('github.io')) {
+	common.URL.BASE += common.URL.href.includes('-test') ? 'twlog/' : 'dt/'
+}
 
 const myMixins = {
 	data() {
