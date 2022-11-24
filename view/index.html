@@ -353,8 +353,9 @@
 
 				showMore(){
 					this.page.no += 1
-					const dp = JSON.parse(JSON.stringify(this.twData))
-					this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
+					this.search()
+					// const dp = JSON.parse(JSON.stringify(this.twData))
+					// this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
 				},
 			}, // methods
 		})
