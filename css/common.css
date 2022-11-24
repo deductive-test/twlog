@@ -1,0 +1,10 @@
+[v-cloak]{display: none;}
+
+.v-btn {text-transform: none;}
+
+.aic {align-items: center;}
+
+.noevent {
+	cursor: pointer;
+	pointer-events: none;
+}

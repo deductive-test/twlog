@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<title>twitter log</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+	
+	<link rel="shortcut icon" href="../img/favicon.png">
+
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+	<link href="../css/common.css" rel="stylesheet">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+	<div id="app" v-cloak>
+		<v-app>
+
+			<v-main>
+				<v-container>
+
+					<!-- load -->
+					<v-row class="aic">
+						<v-col class="pb-0">
+							<v-select v-model="input.target" :items="selectDate" label="log" dense outlined hide-details clearable @change="LoadData"></v-select>
+						</v-col>
+						<v-col cols="1" class="aic pl-0 pb-0">
+							<v-btn icon x-small @click="dialogHelp.isShow = true">
+								<v-icon>mdi-information-outline</v-icon>
+							</v-btn>
+						</v-col>
+						<!-- <v-col :cols="$vuetify.breakpoint.xs ? 12 : 6" :class="$vuetify.breakpoint.xs ? 'pt-0' : 'pl-0'">
+							<v-text-field v-model="input.free" label="free path" dense outlined hide-details clearable></v-text-field>
+						</v-col>
+						<v-col cols="12" class="py-0">
+							<v-btn block @click="LoadData">Load</v-btn>
+						</v-col> -->
+					</v-row>
+
+					<!-- search -->
+					<v-row v-if="twData && twData.length > 0" class="aic">
+						<!-- TODO -->
+						<!-- <v-col class="pr-0">
+							<v-switch v-model="input.showDesc" :label="input.showDesc ? 'desc' : 'asc'" class="mt-0" dense small hide-details></v-switch>
+						</v-col> -->
+						<v-col :cols="$vuetify.breakpoint.xs ? 6 : 8">
+							<v-text-field v-model="input.keyword" label="keyword" dense outlined hide-details clearable></v-text-field>
+						</v-col>
+						<v-col class="pl-0">
+							<v-text-field v-model.number="input.rt" label="RT" dense outlined hide-details></v-text-field>
+						</v-col>
+						<v-col class="pl-0">
+							<v-text-field v-model.number="input.like" label="Like" dense outlined hide-details></v-text-field>
+						</v-col>
+						<v-col cols="12" class="pt-0"><v-btn block @click="search">Search</v-btn></v-col>
+					</v-row>
+
+					<!-- count -->
+					<v-row v-if="twData && twData.length > 0" dense class="text-caption">
+						<v-col class="text-end">{{page.searched.toLocaleString()}} / {{twData.length.toLocaleString()}}</v-col>
+					</v-row>
+
+					<!-- TL -->
+					<template v-for="(tw,i) in twDataShow">
+						<v-row v-if="i < page.no * page.max" :key="'tw-'+i" :id="tw.id" :data-debug="tw.index" class="pa-0 ma-0">
+							<v-col class="rounded-lg my-3" style="border: 1px solid #999;">
+
+								<!-- date, id -->
+								<v-row dense>
+									<v-col>{{tw.created_at_str}}</v-col>
+									<v-col cols="auto" class="text-end grey--text text-caption">[{{tw.index}}]</v-col>
+								</v-row>
+
+								<!-- text -->
+								<v-row class="mt-0 text-pre-wrap">
+									<v-col>{{tw.full_text}}</v-col>
+								</v-row>
+
+								<!-- url -->
+								<v-row v-if="tw.entities.urls && tw.entities.urls.length > 0" dense>
+									<v-col v-for="(url,urli) in tw.entities.urls" :key="'url-'+urli" cols="12">
+										<a :href="url.expanded_url" target="_blank">{{url.display_url}}</a>
+									</v-col>
+								</v-row>
+
+								<!-- media -->
+								<v-row v-if="tw.customImg && tw.customImg.length > 0" dense>
+									<v-col>
+										<a
+											v-for="(tm, tmIndex) in tw.customImg"
+											:key="`media-${tw.id}-${tmIndex}`"
+											:href="tm"
+											target="_blank"
+											style="display: block;"
+										>
+											<video v-if="tm.slice(-4) == '.mp4'" :src="tm" style="width: 100%;"></video>
+											<img v-else :src="tm" style="width: 100%; object-fit: contain;" />
+										</a>
+									</v-col>
+								</v-row>
+
+								<!-- id, RT, Like, Reply -->
+								<v-row dense>
+
+									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">#{{tw.id}}</v-col>
+
+									<v-col class="text-end">
+
+										<v-btn color="green accent-4" text x-small class="noevent">
+											<v-icon color="green accent-4">mdi-repeat-variant</v-icon> {{tw.retweet_count}}
+										</v-btn>
+
+										<v-btn color="pink" text x-small :class="'noevent ' + (tw.in_reply_to_status_id ? 'pl-0' : 'px-0')">
+											<v-icon color="pink">mdi-heart</v-icon> {{tw.favorite_count}}
+										</v-btn>
+
+										<v-btn v-if="tw.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#' + tw.in_reply_to_status_id)">
+											<v-icon color="primary">mdi-arrow-down-left</v-icon>
+										</v-btn>
+
+									</v-col>
+
+								</v-row>
+
+							</v-col>
+						</v-row>
+					</template>
+
+					<!-- pager -->
+					<v-row v-if="twData && page.no * page.max < twData.length && twDataShow.length < page.searched" class="mt-0">
+						<v-col>
+							<v-btn block @click="showMore">Show more</v-btn>
+						</v-col>
+					</v-row>
+
+					<div v-show="common.isDebug" style="word-break: break-all;">
+						isDebug<br>lastModified: {{common.lastModified}}<br>{{common.URL.href}}<br>
+					</div>
+				</v-container>
+			</v-main>
+
+			<!-- dialogHefp -->
+			<v-dialog v-model="dialogHelp.isShow" :persistent="dialogHelp.persistent">
+				<v-card>
+					<v-card-title v-if="dialogHelp.title" class="justify-center">{{dialogHelp.title}}</v-card-title>
+					<v-card-subtitle v-if="dialogHelp.subtitle" class="black--text">{{dialogHelp.subtitle}}</v-card-subtitle>
+					<v-card-text class="black--text">
+						「設定→データをダウンロード→アーカイブをダウンロード」でダウンロードしたtweets.jsまたはtweet.jsを元にTLを再現します
+						<br>簡易版：
+						<br><a href="../tw/2022-11-20/tweet.html" target="_blank">2022-04-12~2022-11-20</a>
+					</v-card-text>
+					<v-divider></v-divider>
+					<v-card-actions>
+						<v-spacer></v-spacer>
+						<v-btn text @click="dialogHelp.isShow = false">閉じる</v-btn>
+						<v-spacer></v-spacer>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
+
+			<!-- loading -->
+			<my-loading :overlay="loading"></my-loading>
+
+		</v-app>
+	</div>
+
+	<script src="../js/mixins.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+	<script src="../js/lib/httpVueLoader@1.4.2.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+	<script>
+		const vm = new Vue({
+			el: '#app',
+			vuetify: new Vuetify(),
+			mixins:[myMixins],
+			components:{
+				'my-loading':httpVueLoader(`${common.URL.BASE}components/loading.vue?_=${(new Date()).getTime()}`),
+			},
+			computed: {
+				// twDataShowPage(){
+				// 	let res = []
+				// 	try {
+				// 		if (this.twDataShow && this.twDataShow.length > 0) {
+				// 			const dp = JSON.parse(JSON.stringify(this.twDataShow))
+				// 			res = dp.slice(0, this.page.no * this.page.max < this.twDataShow.length ? this.page.no * this.page.max : this.twDataShow.length)
+				// 		}
+				// 	} catch (e) {console.error(e)}
+				// 	return res
+				// },
+			},
+			data() {
+				return {
+					loading:true,
+
+					input:{
+						target:'',
+						free:'',
+						showDesc:true,
+						keyword:'',
+						rt:0,
+						like:0,
+					},
+					
+					selectDate:[
+						'2022-11-20',
+					],
+					twData:[],
+					twDataShow:[],
+
+					page:{
+						no:1, // start at 1
+						max:100,
+						searched:0,
+					},
+
+					dialogHelp:{
+						isShow:false,
+						persistent:false,
+						title:'How To',
+						subtitle:'',
+					},
+				}
+			},
+			mounted(){
+				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [index] mounted`)
+				this.loading = false
+				// this.input.target = this.selectDate[0]
+				// this.LoadData()
+			}, // mounted
+			methods: {
+				LoadData(){
+					if(!this.NullOrWhiteSpace(this.input.target) && !this.NullOrWhiteSpace(this.input.free)) {
+						console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadData] no input`)
+						return
+					}
+
+					this.loading = true
+					this.twData = []
+					this.page.no = 1
+					this.page.searched = 0
+					this.zjax({
+						url: this.NullOrWhiteSpace(this.input.free) ? `${this.common.URL.BASE}tw/${this.input.target}/data/tweets.js` : this.input.free,
+						dataType : 'text',
+					},
+					done=>{
+						// debugger
+						let txt = done.replace('window.YTD.tweets.part0 = ', '')
+						let row = JSON.parse(txt)
+
+						// sort
+						row = row.sort((a, b) => new Date(a.tweet.created_at) > new Date(b.tweet.created_at) ? -1 : 1)
+						
+						for (let i = 0; i < row.length; i++) {
+
+							let add = {} // = JSON.parse(JSON.stringify(row[i].tweet))
+							add.id = row[i].tweet.id
+							add.index = row.length - 1 - i
+							add.in_reply_to_status_id = row[i].tweet.in_reply_to_status_id
+
+							// date
+							add.created_at = new Date(row[i].tweet.created_at)
+							add.created_at_str = this.FormatDate(add.created_at,'/',true,true)
+
+							// full_text (url replace)
+							add.full_text = row[i].tweet.full_text
+							add.entities = { urls: [] }
+							if (row[i].tweet.entities.urls && row[i].tweet.entities.urls.length > 0) {
+								add.entities.urls = row[i].tweet.entities.urls
+								add.entities.urls.forEach((val,i)=>{
+									if (add.full_text.includes(val.url)) {
+										add.full_text = add.full_text.replace(val.url, '')
+									}
+								})
+							}
+
+							// media
+							add.customImg = []
+							if (row[i].tweet.extended_entities && row[i].tweet.extended_entities.media && row[i].tweet.extended_entities.media.length > 0) {
+								//debugger
+								row[i].tweet.extended_entities.media.forEach((m,mi)=>{
+
+									const sl = m.media_url.split('/')
+									let imageName = `${this.common.URL.BASE}tw/${this.input.target}/data/tweets_media/${add.id}-${sl[sl.length - 1]}`
+
+									// video
+									if (m.type=='video' && m.video_info){
+										// debugger
+										imageName = `${this.common.URL.BASE}tw/${this.input.target}/data/tweets_media/${add.id}-`
+										const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
+										if (mp4) {
+											const mp4l = mp4.url.split('/')
+											imageName += mp4l[mp4l.length - 1]
+											imageName = imageName.split('?tag=12').join('')
+										}
+									}
+
+									add.customImg.push(imageName)
+								})
+							}
+
+							// RT, Like
+							add.retweet_count = !isNaN(row[i].tweet.retweet_count) ? Number(row[i].tweet.retweet_count) : 0
+							add.favorite_count = !isNaN(row[i].tweet.favorite_count) ? Number(row[i].tweet.favorite_count) : 0
+							
+							this.twData.push(add)
+						}
+						this.page.searched = this.twData.length
+						const dp = JSON.parse(JSON.stringify(this.twData))
+						this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
+					},
+					fail=>{},
+					always=>{
+						this.loading = false
+					})
+				}, // LoadData
+
+				search(){
+					this.loading = true
+					let res = []
+					this.twDataShow =[]
+					this.page.no = 1
+					try {
+						res = JSON.parse(JSON.stringify(this.twData))
+
+						if (this.input.keyword) {
+							res = res.filter(x => x.full_text && x.full_text.includes(this.input.keyword))
+						}
+
+						if(this.input.rt && !isNaN(this.input.rt)){
+							res = res.filter(x => this.input.rt <= x.retweet_count)
+						}
+
+						if(this.input.like && !isNaN(this.input.like)){
+							res = res.filter(x => this.input.like <= x.favorite_count)
+						}
+
+						// TODO
+						// res = res.sort((a,b)=> this.input.showDesc
+						// 	? a.created_at > b.created_at ? -1 : 1
+						// 	: a.created_at > b.created_at ? 1 : 1
+						// )
+
+					} catch (e) {console.error(e)}
+					this.loading = false
+					this.twDataShow = res.slice(0, this.page.no * this.page.max < res.length ? this.page.no * this.page.max : res.length)
+					this.page.searched = res.length
+				}, // search
+
+				showMore(){
+					this.page.no += 1
+					const dp = JSON.parse(JSON.stringify(this.twData))
+					this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
+				},
+			}, // methods
+		})
+	</script>
+</body>
+
+</html>
