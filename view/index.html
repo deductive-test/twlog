@@ -319,11 +319,11 @@
 					})
 				}, // LoadData
 
-				search(){
+				search(isPageAdd){
 					this.loading = true
 					let res = []
 					this.twDataShow =[]
-					this.page.no = 1
+					this.page.no = isPageAdd ? this.page.no : 1
 					try {
 						res = JSON.parse(JSON.stringify(this.twData))
 
@@ -353,7 +353,7 @@
 
 				showMore(){
 					this.page.no += 1
-					this.search()
+					this.search(true)
 					// const dp = JSON.parse(JSON.stringify(this.twData))
 					// this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
 				},
