@@ -180,7 +180,10 @@
 						<br>・検索機能のアップデート(メディア、期間)
 						<br>・スレッド表示 -->
 						<br>簡易版：
-						<br><a href="../tw/2022-11-20/tweet.html" target="_blank">2022-04-12~2022-11-20</a>
+						<template v-for="log in selectDate">
+							<br>
+							<a :href="`${common.URL.TWDATA}${log.value}/tweet.html`" target="_blank">{{log.text}}</a>
+						</template>
 					</v-card-text>
 					<v-divider></v-divider>
 					<v-card-actions>
