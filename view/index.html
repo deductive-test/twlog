@@ -332,12 +332,12 @@
 								row[i].tweet.extended_entities.media.forEach((m,mi)=>{
 
 									const sl = m.media_url.split('/')
-									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-${sl[sl.length - 1]}`
+									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`
 
 									// video
 									if (m.type=='video' && m.video_info){
 										// debugger
-										imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-`
+										imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${isTweet ? '' : 's'}_media/${add.id}-`
 										const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
 										if (mp4) {
 											const mp4l = mp4.url.split('/')
