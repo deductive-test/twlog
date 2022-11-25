@@ -182,7 +182,7 @@
 						<br>簡易版：
 						<template v-for="log in selectDate">
 							<br>
-							<a :href="`${common.URL.TWDATA}${log.value}/tweet.html`" target="_blank">{{log.text}}</a>
+							<a :href="`${common.URL.TWDATA}${log.value}/tweet${log.data.isTweet ? '' : 's'}.html`" target="_blank">{{log.text}}</a>
 						</template>
 					</v-card-text>
 					<v-divider></v-divider>
@@ -238,6 +238,13 @@
 								isTweet:false,
 							},
 						},
+						{
+							text:'2022-04-12 ~ 2022-08-07',
+							value:'2022-08-07',
+							data:{
+								isTweet:true,
+							},
+						},
 					],
 					twData:[],
 					twDataShow:[],
@@ -277,14 +284,19 @@
 						return
 					}
 
+					var isTweet = true
+					if (-1 < this.selectDate.findIndex(x => x.value == this.input.target)) {
+						isTweet = this.selectDate.find(x => x.value == this.input.target).data.isTweet
+					}
+
 					this.loading = true
 					this.zjax({
-						url: this.NullOrWhiteSpace(this.input.free) ? `${this.common.URL.TWDATA}${this.input.target}/data/tweets.js` : this.input.free,
+						url: this.NullOrWhiteSpace(this.input.free) ? `${this.common.URL.TWDATA}${this.input.target}/data/tweet${isTweet ? '' : 's'}.js` : this.input.free,
 						dataType : 'text',
 					},
 					done=>{
 						// debugger
-						let txt = done.replace('window.YTD.tweets.part0 = ', '')
+						let txt = done.replace(`window.YTD.tweet${isTweet ? '' : 's'}.part0 = `, '')
 						let row = JSON.parse(txt)
 
 						// sort
@@ -343,7 +355,8 @@
 							add.favorite_count = !isNaN(row[i].tweet.favorite_count) ? Number(row[i].tweet.favorite_count) : 0
 							
 							this.twData.push(add)
-						}
+						} // for
+
 						this.page.searched = this.twData.length
 						const dp = JSON.parse(JSON.stringify(this.twData))
 						this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
