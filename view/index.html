@@ -95,7 +95,7 @@
 						<v-row v-if="i < page.no * page.max" :key="'tw-'+i" :id="tw.id" :data-debug="tw.index" class="pa-0 ma-0">
 							<v-col class="rounded-lg my-3" style="border: 1px solid #999;">
 
-								<!-- date, id -->
+								<!-- date, index -->
 								<v-row dense class="text-caption">
 									<v-col>{{tw.created_at_str}}</v-col>
 									<v-col cols="auto" class="text-end grey--text">[{{tw.index}}]</v-col>
@@ -132,7 +132,11 @@
 								<!-- id, RT, Like, Reply -->
 								<v-row dense>
 
-									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">#{{tw.id}}</v-col>
+									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">
+										#{{tw.id}}
+										<!-- TODO -->
+										<!-- <a :href="`${common.URL.BASE}view/detail.html?target=${input.target}&id=${tw.id}`">#{{tw.id}}</a> -->
+									</v-col>
 
 									<v-col class="text-end">
 
@@ -245,6 +249,27 @@
 								isTweet:true,
 							},
 						},
+						{
+							text: '2022-04-12 ~ 2022-05-08',
+							value: '2022-05-08',
+							data: {
+								isTweet: true,
+							},
+						},
+						{
+							text: '2022-02-10 ~ 2022-04-12',
+							value: '2022-04-12',
+							data: {
+								isTweet: true,
+							},
+						},
+						{
+							text: '2022-01-07 ~ 2022-02-09',
+							value: '2022-02-09',
+							data: {
+								isTweet: true,
+							},
+						},
 					],
 					twData:[],
 					twDataShow:[],
@@ -327,7 +352,7 @@
 
 							// media
 							add.customImg = []
-							if (row[i].tweet.extended_entities && row[i].tweet.extended_entities.media && row[i].tweet.extended_entities.media.length > 0) {
+							if (row[i].tweet.extended_entities && row[i].tweet.extended_entities.media && row[i].tweet.extended_entities.media.length > 0 && !row[i].tweet.full_text.includes('RT @')) {
 								//debugger
 								row[i].tweet.extended_entities.media.forEach((m,mi)=>{
 

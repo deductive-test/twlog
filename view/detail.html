@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<title>twitter log</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+	
+	<link rel="shortcut icon" href="../img/favicon.png">
+
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+	<link href="../css/common.css" rel="stylesheet">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+	<div id="app" v-cloak>
+		<v-app>
+
+			<v-main>
+				<v-container>
+
+					<!-- TL -->
+					<template v-for="(tw,i) in twDataShow">
+						<v-row :key="'tw-'+i" :id="tw.id" :data-debug="tw.index" class="pa-0 ma-0">
+							<v-col class="rounded-lg my-3" style="border: 1px solid #999;">
+
+								<!-- date, id -->
+								<v-row dense class="text-caption">
+									<v-col>{{tw.created_at_str}}</v-col>
+									<v-col cols="auto" class="text-end grey--text">[{{tw.index}}]</v-col>
+								</v-row>
+
+								<!-- text -->
+								<v-row class="mt-0 text-pre-wrap">
+									<v-col>{{tw.full_text}}</v-col>
+								</v-row>
+
+								<!-- url -->
+								<v-row v-if="tw.entities.urls && tw.entities.urls.length > 0" dense>
+									<v-col v-for="(url,urli) in tw.entities.urls" :key="'url-'+urli" cols="12">
+										<a :href="url.expanded_url" target="_blank">{{url.display_url}}</a>
+									</v-col>
+								</v-row>
+
+								<!-- media -->
+								<v-row v-if="tw.customImg && tw.customImg.length > 0" dense>
+									<v-col>
+										<a
+											v-for="(tm, tmIndex) in tw.customImg"
+											:key="`media-${tw.id}-${tmIndex}`"
+											:href="tm"
+											target="_blank"
+											style="display: block;"
+										>
+											<video v-if="tm.slice(-4) == '.mp4'" :src="tm" style="width: 100%;"></video>
+											<img v-else :src="tm" style="width: 100%; object-fit: contain;" />
+										</a>
+									</v-col>
+								</v-row>
+
+								<!-- id, RT, Like, Reply -->
+								<v-row dense>
+
+									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">#{{tw.id}}</v-col>
+
+									<v-col class="text-end">
+
+										<v-btn color="green accent-4" text x-small class="noevent">
+											<v-icon color="green accent-4">mdi-repeat-variant</v-icon> {{tw.retweet_count}}
+										</v-btn>
+
+										<v-btn color="pink" text x-small :class="'noevent ' + (tw.in_reply_to_status_id ? 'pl-0' : 'px-0')">
+											<v-icon color="pink">mdi-heart</v-icon> {{tw.favorite_count}}
+										</v-btn>
+
+										<v-btn v-if="tw.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#' + tw.in_reply_to_status_id)">
+											<v-icon color="primary">mdi-arrow-down-left</v-icon>
+										</v-btn>
+
+									</v-col>
+
+								</v-row>
+
+							</v-col>
+						</v-row>
+					</template>
+
+					<div v-show="common.isDebug" style="word-break: break-all;">
+						isDebug<br>lastModified: {{common.lastModified}}<br>{{common.URL.href}}<br>
+					</div>
+
+				</v-container>
+			</v-main>
+
+			<!-- loading -->
+			<my-loading :overlay="loading"></my-loading>
+
+		</v-app>
+	</div>
+
+	<script src="../js/mixins.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+	<script src="../js/lib/httpVueLoader@1.4.2.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+	<script>
+		const vm = new Vue({
+			el: '#app',
+			vuetify: new Vuetify(),
+			mixins:[myMixins],
+			components:{
+				'my-loading':httpVueLoader(`${common.URL.BASE}components/loading.vue?_=${(new Date()).getTime()}`),
+			},
+			computed: {
+			},
+			data() {
+				return {
+					loading:true,
+
+					input:{
+						target:'',
+						id:'',
+					},
+					
+					twData:[],
+					twDataShow:[],
+
+					dialogHelp:{
+						isShow:false,
+						persistent:false,
+						title:'How To',
+						subtitle:'',
+					},
+				}
+			},
+			mounted(){
+				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [index] mounted`)
+				this.loading = false
+				this.input.target = this.getQuery('target')
+				this.input.id = this.getQuery('id')
+				this.LoadData()
+			}, // mounted
+			methods: {
+				LoadData(){
+					if(this.NullOrWhiteSpace(this.input.target) || this.NullOrWhiteSpace(this.input.id)) {
+						console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadData] no input`)
+						return
+					}
+
+					this.twData = []
+					this.twDataShow = []
+
+					this.loading = true
+					this.zjax({
+						url: `${this.common.URL.TWDATA}${this.input.target}/data/tweets.js`,
+						dataType : 'text',
+					},
+					done=>{
+						let txt = done.replace('window.YTD.tweets.part0 = ', '')
+						let row = JSON.parse(txt)
+
+						const searchInReply = (id,isParent=true) => {
+							debugger
+							const fi = row.findIndex(x => id == isParent===true ? x.tweet.id : x.tweet.in_reply_to_status_id)
+
+							if (-1 == fi) {
+								// not found
+								return
+							} else if (-1 < this.twDataShow.findIndex(x => x.id == row[fi].tweet.id)) {
+								// found and already added
+								return
+							}
+
+							let add = {
+								id: row[fi].tweet.id,
+								index: -1, // after sort
+								in_reply_to_status_id: row[fi].tweet.in_reply_to_status_id,
+								created_at: new Date(row[fi].tweet.created_at),
+								created_at_str: this.FormatDate(new Date(row[fi].tweet.created_at),'/',true,true),
+								full_text : row[fi].tweet.full_text,
+								entities : { urls: [] },
+								customImg : [],
+								retweet_count : !isNaN(row[fi].tweet.retweet_count) ? Number(row[fi].tweet.retweet_count) : 0,
+								favorite_count : !isNaN(row[fi].tweet.favorite_count) ? Number(row[fi].tweet.favorite_count) : 0
+							}
+
+							if (row[fi].tweet.entities.urls && row[fi].tweet.entities.urls.length > 0) {
+								add.entities.urls = row[fi].tweet.entities.urls
+								add.entities.urls.forEach((val,i)=>{
+									if (add.full_text.includes(val.url)) {
+										add.full_text = add.full_text.replace(val.url, '')
+									}
+								})
+							}
+
+							if (row[fi].tweet.extended_entities && row[fi].tweet.extended_entities.media && row[fi].tweet.extended_entities.media.length > 0) {
+								//debugger
+								row[fi].tweet.extended_entities.media.forEach((m,mi)=>{
+
+									const sl = m.media_url.split('/')
+									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-${sl[sl.length - 1]}`
+
+									// video
+									if (m.type=='video' && m.video_info){
+										// debugger
+										imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-`
+										const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
+										if (mp4) {
+											const mp4l = mp4.url.split('/')
+											imageName += mp4l[mp4l.length - 1]
+											imageName = imageName.split('?tag=12').join('')
+										}
+									}
+
+									add.customImg.push(imageName)
+								})
+							}
+
+							this.twDataShow.push(add)
+
+							// do recursive
+							if (isParent===true){
+								if (!this.NullOrWhiteSpace(add.in_reply_to_status_id)){
+									searchInReply(add.in_reply_to_status_id,isParent)
+								}
+							} else {
+								searchInReply(add.id,isParent)
+							}
+						}
+						searchInReply(this.input.id,true) // parent
+						searchInReply(this.input.id,false) // children
+
+						// sort
+						this.twDataShow = this.twDataShow.sort((a, b) => new Date(a.tweet.created_at) > new Date(b.tweet.created_at) ? -1 : 1)
+						
+						for (let i = 0; i < row.length; i++) {
+
+							let add = {} // = JSON.parse(JSON.stringify(row[i].tweet))
+							add.id = row[i].tweet.id
+							add.index = row.length - 1 - i
+							add.in_reply_to_status_id = row[i].tweet.in_reply_to_status_id
+
+							// date
+							add.created_at = new Date(row[i].tweet.created_at)
+							add.created_at_str = this.FormatDate(add.created_at,'/',true,true)
+
+							// full_text (url replace)
+							add.full_text = row[i].tweet.full_text
+							add.entities = { urls: [] }
+							if (row[i].tweet.entities.urls && row[i].tweet.entities.urls.length > 0) {
+								add.entities.urls = row[i].tweet.entities.urls
+								add.entities.urls.forEach((val,i)=>{
+									if (add.full_text.includes(val.url)) {
+										add.full_text = add.full_text.replace(val.url, '')
+									}
+								})
+							}
+
+							// media
+							add.customImg = []
+							if (row[i].tweet.extended_entities && row[i].tweet.extended_entities.media && row[i].tweet.extended_entities.media.length > 0) {
+								//debugger
+								row[i].tweet.extended_entities.media.forEach((m,mi)=>{
+
+									const sl = m.media_url.split('/')
+									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-${sl[sl.length - 1]}`
+
+									// video
+									if (m.type=='video' && m.video_info){
+										// debugger
+										imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-`
+										const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
+										if (mp4) {
+											const mp4l = mp4.url.split('/')
+											imageName += mp4l[mp4l.length - 1]
+											imageName = imageName.split('?tag=12').join('')
+										}
+									}
+
+									add.customImg.push(imageName)
+								})
+							}
+
+							// RT, Like
+							add.retweet_count = !isNaN(row[i].tweet.retweet_count) ? Number(row[i].tweet.retweet_count) : 0
+							add.favorite_count = !isNaN(row[i].tweet.favorite_count) ? Number(row[i].tweet.favorite_count) : 0
+							
+							this.twData.push(add)
+						}
+						// TODO this.twDataShow
+
+					},
+					fail=>{},
+					always=>{
+						this.loading = false
+					})
+				}, // LoadData
+
+			}, // methods
+		})
+	</script>
+</body>
+
+</html>
