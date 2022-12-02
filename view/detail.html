@@ -124,6 +124,18 @@
 				'my-loading':httpVueLoader(`${common.URL.BASE}components/loading.vue?_=${(new Date()).getTime()}`),
 			},
 			computed: {
+				isTweet(){
+					let res = false
+					try {
+						if (!this.selectDate && this.selectDate.length == 0) return res
+
+						const fi = this.selectDate.findIndex(x => x.value == this.input.target)
+						if (-1 < fi){
+							res = this.selectDate[fi].data.isTweet
+						}
+					} catch (e) {console.error(e)}
+					return res
+				},
 			},
 			data() {
 				return {
@@ -167,11 +179,11 @@
 
 					this.loading = true
 					this.zjax({
-						url: `${this.common.URL.TWDATA}${this.input.target}/data/tweets.js`,
+						url: `${this.common.URL.TWDATA}${this.input.target}/data/tweet${this.isTweet ? '' : 's'}.js`,
 						dataType : 'text',
 					},
 					done=>{
-						let txt = done.replace('window.YTD.tweets.part0 = ', '')
+						let txt = done.replace(`window.YTD.tweet${this.isTweet ? '' : 's'}.part0 = `, '')
 						let row = JSON.parse(txt)
 
 						const searchInReply = (id,isParent=true) => {
@@ -214,12 +226,12 @@
 								row[fi].tweet.extended_entities.media.forEach((m,mi)=>{
 
 									const sl = m.media_url.split('/')
-									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-${sl[sl.length - 1]}`
+									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${this.isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`
 
 									// video
 									if (m.type=='video' && m.video_info){
 										// debugger
-										imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-`
+										imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${this.isTweet ? '' : 's'}_media/${add.id}-`
 										const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
 										if (mp4) {
 											const mp4l = mp4.url.split('/')
