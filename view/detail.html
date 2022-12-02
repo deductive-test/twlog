@@ -24,6 +24,14 @@
 			<v-main>
 				<v-container>
 
+					<v-row>
+						<v-col>
+							<v-btn text :href="backUrl">
+								<v-icon>mdi-arrow-left</v-icon> Back
+							</v-btn>
+						</v-col>
+					</v-row>
+
 					<!-- TL -->
 					<template v-for="(tw,i) in twDataShow">
 						<v-row :key="'tw-'+i" :id="tw.id" :data-debug="tw.index" class="pa-0 ma-0">
@@ -79,7 +87,7 @@
 										</v-btn>
 
 										<v-btn v-if="tw.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#' + tw.in_reply_to_status_id)">
-											<v-icon color="primary">mdi-arrow-down-left</v-icon>
+											<v-icon color="primary">mdi-arrow-up-right</v-icon>
 										</v-btn>
 
 									</v-col>
@@ -135,6 +143,8 @@
 						title:'How To',
 						subtitle:'',
 					},
+
+					backUrl:'',
 				}
 			},
 			mounted(){
@@ -142,6 +152,7 @@
 				this.loading = false
 				this.input.target = this.getQuery('target')
 				this.input.id = this.getQuery('id')
+				this.backUrl = `${this.common.URL.BASE}view/index.html?target=${this.input.target || ''}&id=${this.input.id || ''}`
 				this.LoadData()
 			}, // mounted
 			methods: {
@@ -164,8 +175,9 @@
 						let row = JSON.parse(txt)
 
 						const searchInReply = (id,isParent=true) => {
-							debugger
-							const fi = row.findIndex(x => id == isParent===true ? x.tweet.id : x.tweet.in_reply_to_status_id)
+							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [searchInReply] id=${id}, isParent=${isParent}`)
+
+							const fi = row.findIndex(x => id == (isParent===true ? x.tweet.id : x.tweet.in_reply_to_status_id))
 
 							if (-1 == fi) {
 								// not found
@@ -225,74 +237,21 @@
 							// do recursive
 							if (isParent===true){
 								if (!this.NullOrWhiteSpace(add.in_reply_to_status_id)){
-									searchInReply(add.in_reply_to_status_id,isParent)
+									searchInReply(add.in_reply_to_status_id,true)
 								}
 							} else {
-								searchInReply(add.id,isParent)
+								searchInReply(add.id,false)
 							}
 						}
 						searchInReply(this.input.id,true) // parent
 						searchInReply(this.input.id,false) // children
 
-						// sort
-						this.twDataShow = this.twDataShow.sort((a, b) => new Date(a.tweet.created_at) > new Date(b.tweet.created_at) ? -1 : 1)
-						
-						for (let i = 0; i < row.length; i++) {
+						// sort asc
+						this.twDataShow = this.twDataShow.sort((a, b) => new Date(a.created_at) < new Date(b.created_at) ? -1 : 1)
 
-							let add = {} // = JSON.parse(JSON.stringify(row[i].tweet))
-							add.id = row[i].tweet.id
-							add.index = row.length - 1 - i
-							add.in_reply_to_status_id = row[i].tweet.in_reply_to_status_id
-
-							// date
-							add.created_at = new Date(row[i].tweet.created_at)
-							add.created_at_str = this.FormatDate(add.created_at,'/',true,true)
-
-							// full_text (url replace)
-							add.full_text = row[i].tweet.full_text
-							add.entities = { urls: [] }
-							if (row[i].tweet.entities.urls && row[i].tweet.entities.urls.length > 0) {
-								add.entities.urls = row[i].tweet.entities.urls
-								add.entities.urls.forEach((val,i)=>{
-									if (add.full_text.includes(val.url)) {
-										add.full_text = add.full_text.replace(val.url, '')
-									}
-								})
-							}
-
-							// media
-							add.customImg = []
-							if (row[i].tweet.extended_entities && row[i].tweet.extended_entities.media && row[i].tweet.extended_entities.media.length > 0) {
-								//debugger
-								row[i].tweet.extended_entities.media.forEach((m,mi)=>{
-
-									const sl = m.media_url.split('/')
-									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-${sl[sl.length - 1]}`
-
-									// video
-									if (m.type=='video' && m.video_info){
-										// debugger
-										imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweets_media/${add.id}-`
-										const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
-										if (mp4) {
-											const mp4l = mp4.url.split('/')
-											imageName += mp4l[mp4l.length - 1]
-											imageName = imageName.split('?tag=12').join('')
-										}
-									}
-
-									add.customImg.push(imageName)
-								})
-							}
-
-							// RT, Like
-							add.retweet_count = !isNaN(row[i].tweet.retweet_count) ? Number(row[i].tweet.retweet_count) : 0
-							add.favorite_count = !isNaN(row[i].tweet.favorite_count) ? Number(row[i].tweet.favorite_count) : 0
-							
-							this.twData.push(add)
+						for (let i = 0; i < this.twDataShow.length; i++) {
+							this.twDataShow[i].index = i
 						}
-						// TODO this.twDataShow
-
 					},
 					fail=>{},
 					always=>{

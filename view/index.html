@@ -133,9 +133,7 @@
 								<v-row dense>
 
 									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">
-										#{{tw.id}}
-										<!-- TODO -->
-										<!-- <a :href="`${common.URL.BASE}view/detail.html?target=${input.target}&id=${tw.id}`">#{{tw.id}}</a> -->
+										<a :href="`${common.URL.BASE}view/detail.html?target=${input.target}&id=${tw.id}`">#{{tw.id}}</a>
 									</v-col>
 
 									<v-col class="text-end">
@@ -149,7 +147,7 @@
 										</v-btn>
 
 										<v-btn v-if="tw.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#' + tw.in_reply_to_status_id)">
-											<v-icon color="primary">mdi-arrow-down-left</v-icon>
+											<v-icon color="primary">{{input. showDesc ? 'mdi-arrow-down-left' : 'mdi-arrow-up-right'}}</v-icon>
 										</v-btn>
 
 									</v-col>
@@ -290,7 +288,12 @@
 			},
 			mounted(){
 				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [index] mounted`)
-				this.loading = false
+				if (this.hasQuery('target')){
+					this.input.target = this.getQuery('target')
+					this.LoadData()
+				} else {
+					this.loading = false
+				}
 			}, // mounted
 			methods: {
 				LoadData(){
