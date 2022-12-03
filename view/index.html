@@ -179,7 +179,8 @@
 					<v-card-text class="black--text">
 						「設定→データをダウンロード→アーカイブをダウンロード」でダウンロードしたtweets.jsまたはtweet.jsを元にTLを再現します
 						<!-- <br>今後のリリース予定
-						<br>・twitterログの自由URL受入 -->
+						<br>・twitterログの自由URL受入
+					・日付範囲をjsonベースに限定 -->
 						<br>簡易版：
 						<template v-for="log in selectDate">
 							<br>
@@ -274,10 +275,13 @@
 						return
 					}
 
-					var isTweet = true
-					if (-1 < this.selectDate.findIndex(x => x.value == this.input.target)) {
-						isTweet = this.selectDate.find(x => x.value == this.input.target).data.isTweet
-					}
+					//debugger
+					var isTweet = this.selected.data.isTweet === true
+					var isChildTweet = this.selected.data.isChildTweet === true
+					// if (-1 < this.selectDate.findIndex(x => x.value == this.input.target)) {
+					// 	isTweet = this.selectDate.find(x => x.value == this.input.target).data.isTweet
+					// 	isChildTweet = this.selectDate.find(x => x.value == this.input.target).data.isChildTweet
+					// }
 
 					this.loading = true
 					this.zjax({
@@ -285,29 +289,31 @@
 						dataType : 'text',
 					},
 					done=>{
-						// debugger
+						//debugger
 						let txt = done.replace(`window.YTD.tweet${isTweet ? '' : 's'}.part0 = `, '')
 						let row = JSON.parse(txt)
 
 						// sort
-						row = row.sort((a, b) => new Date(a.tweet.created_at) > new Date(b.tweet.created_at) ? -1 : 1)
+						row = row.sort((a, b) => new Date(isChildTweet ? a.tweet.created_at : a.created_at) > new Date(isChildTweet ? b.tweet.created_at : b.created_at) ? -1 : 1)
 						
 						for (let i = 0; i < row.length; i++) {
 
-							let add = {} // = JSON.parse(JSON.stringify(row[i].tweet))
-							add.id = row[i].tweet.id
+							const rowTw = isChildTweet ? row[i].tweet : row[i]
+
+							let add = {}
+							add.id = rowTw.id
 							add.index = row.length - 1 - i
-							add.in_reply_to_status_id = row[i].tweet.in_reply_to_status_id
+							add.in_reply_to_status_id = rowTw.in_reply_to_status_id
 
 							// date
-							add.created_at = new Date(row[i].tweet.created_at)
+							add.created_at = new Date(rowTw.created_at)
 							add.created_at_str = this.FormatDate(add.created_at,'/',true,true)
 
 							// full_text (url replace)
-							add.full_text = row[i].tweet.full_text
+							add.full_text = rowTw.full_text
 							add.entities = { urls: [] }
-							if (row[i].tweet.entities.urls && row[i].tweet.entities.urls.length > 0) {
-								add.entities.urls = row[i].tweet.entities.urls
+							if (rowTw.entities.urls && rowTw.entities.urls.length > 0) {
+								add.entities.urls = rowTw.entities.urls
 								add.entities.urls.forEach((val,i)=>{
 									if (add.full_text.includes(val.url)) {
 										add.full_text = add.full_text.replace(val.url, '')
@@ -317,9 +323,9 @@
 
 							// media
 							add.customImg = []
-							if (row[i].tweet.extended_entities && row[i].tweet.extended_entities.media && row[i].tweet.extended_entities.media.length > 0 && !row[i].tweet.full_text.includes('RT @')) {
+							if (rowTw.extended_entities && rowTw.extended_entities.media && rowTw.extended_entities.media.length > 0 && !rowTw.full_text.includes('RT @')) {
 								//debugger
-								row[i].tweet.extended_entities.media.forEach((m,mi)=>{
+								rowTw.extended_entities.media.forEach((m,mi)=>{
 
 									const sl = m.media_url.split('/')
 									let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`
@@ -341,8 +347,8 @@
 							}
 
 							// RT, Like
-							add.retweet_count = !isNaN(row[i].tweet.retweet_count) ? Number(row[i].tweet.retweet_count) : 0
-							add.favorite_count = !isNaN(row[i].tweet.favorite_count) ? Number(row[i].tweet.favorite_count) : 0
+							add.retweet_count = !isNaN(rowTw.retweet_count) ? Number(rowTw.retweet_count) : 0
+							add.favorite_count = !isNaN(rowTw.favorite_count) ? Number(rowTw.favorite_count) : 0
 							
 							this.twData.push(add)
 						} // for

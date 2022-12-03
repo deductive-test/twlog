@@ -30,6 +30,7 @@ const myMixins = {
 					value:'2022-11-20',
 					data:{
 						isTweet:false,
+						isChildTweet: true,
 					},
 				},
 				{
@@ -37,6 +38,7 @@ const myMixins = {
 					value:'2022-08-07',
 					data:{
 						isTweet:true,
+						isChildTweet: true,
 					},
 				},
 				{
@@ -44,6 +46,7 @@ const myMixins = {
 					value: '2022-05-08',
 					data: {
 						isTweet: true,
+						isChildTweet: true,
 					},
 				},
 				{
@@ -51,6 +54,7 @@ const myMixins = {
 					value: '2022-04-12',
 					data: {
 						isTweet: true,
+						isChildTweet: true,
 					},
 				},
 				{
@@ -58,17 +62,92 @@ const myMixins = {
 					value: '2022-02-09',
 					data: {
 						isTweet: true,
+						isChildTweet: true,
 					},
 				},
-			], // 
+				{
+					text: '2021-10-03 ~ 2022-01-02',
+					value: '2022-01-02',
+					data: {
+						isTweet: true,
+						isChildTweet: true,
+					},
+				},
+				{
+					text: '2021-02-04 ~ 2021-05-06',
+					value: '2021-05-06',
+					data: {
+						isTweet: true,
+						isChildTweet: true,
+					},
+				},
+				{
+					text: '2020-11-19 ~ 2021-01-27',
+					value: '2021-01-27',
+					data: {
+						isTweet: true,
+						isChildTweet: true,
+					},
+				},
+				{
+					text: '2020-08-30 ~ 2020-11-15',
+					value: '2020-11-15',
+					data: {
+						isTweet: true,
+						isChildTweet: true,
+					},
+				},
+				{
+					text: '2020-08-30 ~ 2020-10-13',
+					value: '2020-10-13',
+					data: {
+						isTweet: true,
+					},
+				},
+				{
+					text: '2020-02-09 ~ 2020-05-31',
+					value: '2020-05-31',
+					data: {
+						isTweet: true,
+						isChildTweet: true,
+					},
+				},
+				{
+					text: '2019-07-21 ~ 2020-02-07',
+					value: '2020-02-07',
+					data: {
+						isTweet: true,
+						isChildTweet: true,
+					},
+				},
+				{
+					text: '2019-07-21 ~ 2019-08-29',
+					value: '2019-08-29',
+					data: {
+						isTweet: true,
+						isChildTweet:false,
+					},
+				},
+				/*
+				{
+					text: ' ~ ',
+					value: '',
+					data: {
+						isTweet: true,
+					},
+				},
+				*/
+			], // selectDate 
 		}
 	}, // data
 	computed: {
-		VuetifyBreakPoint(){
-			let res = ''
+		selected() {
+			let res = {}
 			try {
-				res = this.$vuetify.breakpoint.name
-			} catch (e) {console.error(e)}
+				if (-1 < this.selectDate.findIndex(x => x.value == this.input.target)) {
+					res = JSON.parse(JSON.stringify(this.selectDate.find(x => x.value == this.input.target)))
+				}
+			} catch (e) { console.error(e) }
 			return res
 		},
 	},
