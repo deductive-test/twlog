@@ -419,6 +419,43 @@
 
 				showDetail(id){
 					console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [showDetail] start:${id}`)
+
+					this.twDataShow = []
+
+					const searchInReply = (id,isParent=true) => {
+							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [searchInReply] id=${id}, isParent=${isParent}`)
+
+							const fi = this.twDataShow.findIndex(x => id == (this.input.isParent===true ? x.id : x.in_reply_to_status_id))
+
+							if (-1 == fi) {
+								// not found
+								return
+							} else if (-1 < this.twDataShow.findIndex(x => x.id == this.twDataShow[fi].id)) {
+								// found and already added
+								return
+							}
+
+							const add = JSON.parse(JSON.stringify(this.twDataShow[fi]))
+							this.twDataShow.push(add)
+
+							// do recursive
+							if (isParent===true){
+								if (!this.NullOrWhiteSpace(add.in_reply_to_status_id)){
+									searchInReply(add.in_reply_to_status_id,true)
+								}
+							} else {
+								searchInReply(add.id,false)
+							}
+						}
+						searchInReply(id,true) // parent
+						searchInReply(id,false) // children
+
+						// sort asc
+						this.twDataShow = this.twDataShow.sort((a, b) => new Date(a.created_at) < new Date(b.created_at) ? -1 : 1)
+
+						for (let i = 0; i < this.twDataShow.length; i++) {
+							this.twDataShow[i].index = i
+						}
 				},
 			}, // methods
 		})
