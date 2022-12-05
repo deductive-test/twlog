@@ -425,17 +425,17 @@
 					const searchInReply = (id,isParent=true) => {
 							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [searchInReply] id=${id}, isParent=${isParent}`)
 
-							const fi = this.twDataShow.findIndex(x => id == (this.input.isParent===true ? x.id : x.in_reply_to_status_id))
+							const fi = this.twData.findIndex(x => id == (this.input.isParent===true ? x.id : x.in_reply_to_status_id))
 
 							if (-1 == fi) {
 								// not found
 								return
-							} else if (-1 < this.twDataShow.findIndex(x => x.id == this.twDataShow[fi].id)) {
+							} else if (-1 < this.twDataShow.findIndex(x => x.id == this.twData[fi].id)) {
 								// found and already added
 								return
 							}
 
-							const add = JSON.parse(JSON.stringify(this.twDataShow[fi]))
+							const add = JSON.parse(JSON.stringify(this.twData[fi]))
 							this.twDataShow.push(add)
 
 							// do recursive
