@@ -197,6 +197,80 @@
 				</v-card>
 			</v-dialog>
 
+			<v-dialog v-model="dialogDetail.isShow" persistent>
+				<v-card scrollable>
+					<v-card-title class="justify-end">
+						<v-btn @click="dialogDetail.isShow = false"><v-icon>mdi-cloase</v-icon>閉じる</v-btn>
+					</v-card-title>
+					<v-card-text>
+						<v-row v-for="(twd,i) in twDataDetail" :key="'twd-'+i" :id="'twd-' + twd.id" :data-debug="twd.index" class="pa-0 ma-0">
+							<v-col class="rounded-lg my-3" style="border: 1px solid #999;">
+	
+								<!-- date, index -->
+								<v-row dense class="text-caption">
+									<v-col>{{twd.created_at_str}}</v-col>
+									<v-col cols="auto" class="text-end grey--text">[{{twd.index}}]</v-col>
+								</v-row>
+	
+								<!-- text -->
+								<v-row class="mt-0 text-pre-wrap">
+									<v-col>{{twd.full_text}}</v-col>
+								</v-row>
+	
+								<!-- url -->
+								<v-row v-if="twd.entities.urls && twd.entities.urls.length > 0" dense>
+									<v-col v-for="(url,urli) in twd.entities.urls" :key="'url-'+urli" cols="12">
+										<a :href="url.expanded_url" target="_blank">{{url.display_url}}</a>
+									</v-col>
+								</v-row>
+	
+								<!-- media -->
+								<v-row v-if="twd.customImg && twd.customImg.length > 0" dense>
+									<v-col>
+										<a
+											v-for="(tm, tmIndex) in twd.customImg"
+											:key="`media-${twd.id}-${tmIndex}`"
+											:href="tm"
+											target="_blank"
+											style="display: block;"
+										>
+											<video v-if="tm.slice(-4) == '.mp4'" :src="tm" style="width: 100%;"></video>
+											<img v-else :src="tm" style="width: 100%; object-fit: contain;" />
+										</a>
+									</v-col>
+								</v-row>
+	
+								<!-- id, RT, Like, Reply -->
+								<v-row dense>
+									
+									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">
+										<v-btn text x-small color="primary" class="noevent">#{{twd.id}}</v-btn>
+									</v-col>
+	
+									<v-col class="text-end">
+	
+										<v-btn color="green accent-4" text x-small class="noevent">
+											<v-icon color="green accent-4">mdi-repeat-variant</v-icon> {{twd.retweet_count}}
+										</v-btn>
+	
+										<v-btn color="pink" text x-small :class="'noevent ' + (twd.in_reply_to_status_id ? 'pl-0' : 'px-0')">
+											<v-icon color="pink">mdi-heart</v-icon> {{twd.favorite_count}}
+										</v-btn>
+	
+										<v-btn v-if="twd.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#twd-' + twd.in_reply_to_status_id)">
+											<v-icon color="primary">mdi-arrow-down-left</v-icon>
+										</v-btn>
+	
+									</v-col>
+	
+								</v-row>
+	
+							</v-col>
+						</v-row>
+						</v-card-text>
+				</v-card>
+			</v-dialog>
+
 			<!-- loading -->
 			<my-loading :overlay="loading"></my-loading>
 
@@ -242,6 +316,7 @@
 					
 					twData:[],
 					twDataShow:[],
+					twDataDetail:[],
 
 					page:{
 						no:1, // start at 1
@@ -255,6 +330,10 @@
 						title:'About',
 						subtitle:'',
 					},
+
+					dialogDetail:{
+						isShow:false,
+					}
 				}
 			},
 			mounted(){
@@ -275,7 +354,7 @@
 
 					const target = this.input.free.split(this.input.isTweet ? 'tweet.js' : 'tweets.js')[0]
 
-					debugger
+					// debugger
 
 					this.loading = true
 					this.zjax({
@@ -283,7 +362,7 @@
 						dataType : 'text',
 					},
 					done=>{
-						debugger
+						// debugger
 						let txt = done.replace(`window.YTD.tweet${this.input.isTweet ? '' : 's'}.part0 = `, '')
 						let row = JSON.parse(txt)
 
@@ -420,42 +499,45 @@
 				showDetail(id){
 					console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [showDetail] start:${id}`)
 
-					this.twDataShow = []
+					this.dialogDetail.isShow = false
+					this.twDataDetail = []
 
 					const searchInReply = (id,isParent=true) => {
-							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [searchInReply] id=${id}, isParent=${isParent}`)
+						console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [searchInReply] id=${id}, isParent=${isParent}`)
 
-							const fi = this.twData.findIndex(x => id == (isParent===true ? x.id : x.in_reply_to_status_id))
+						const fi = this.twData.findIndex(x => id == (isParent===true ? x.id : x.in_reply_to_status_id))
 
-							if (-1 == fi) {
-								// not found
-								return
-							} else if (-1 < this.twDataShow.findIndex(x => x.id == this.twData[fi].id)) {
-								// found and already added
-								return
-							}
-
-							const add = JSON.parse(JSON.stringify(this.twData[fi]))
-							this.twDataShow.push(add)
-
-							// do recursive
-							if (isParent===true){
-								if (!this.NullOrWhiteSpace(add.in_reply_to_status_id)){
-									searchInReply(add.in_reply_to_status_id,true)
-								}
-							} else {
-								searchInReply(add.id,false)
-							}
+						if (-1 == fi) {
+							// not found
+							return
+						} else if (-1 < this.twDataDetail.findIndex(x => x.id == this.twData[fi].id)) {
+							// found and already added
+							return
 						}
-						searchInReply(id,true) // parent
-						searchInReply(id,false) // children
 
-						// sort asc
-						this.twDataShow = this.twDataShow.sort((a, b) => new Date(a.created_at) < new Date(b.created_at) ? -1 : 1)
+						const add = JSON.parse(JSON.stringify(this.twData[fi]))
+						this.twDataDetail.push(add)
 
-						for (let i = 0; i < this.twDataShow.length; i++) {
-							this.twDataShow[i].index = i
+						// do recursive
+						if (isParent===true){
+							if (!this.NullOrWhiteSpace(add.in_reply_to_status_id)){
+								searchInReply(add.in_reply_to_status_id,true)
+							}
+						} else {
+							searchInReply(add.id,false)
 						}
+					}
+					searchInReply(id,true) // parent
+					searchInReply(id,false) // children
+
+					// sort asc
+					this.twDataDetail = this.twDataDetail.sort((a, b) => new Date(a.created_at) < new Date(b.created_at) ? -1 : 1)
+
+					for (let i = 0; i < this.twDataDetail.length; i++) {
+						this.twDataDetail[i].index = i
+					}
+
+					this.dialogDetail.isShow = true
 				},
 			}, // methods
 		})
