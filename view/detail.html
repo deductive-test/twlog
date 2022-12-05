@@ -181,7 +181,7 @@
 						const searchInReply = (id,isParent=true) => {
 							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [searchInReply] id=${id}, isParent=${isParent}`)
 
-							const fi = row.findIndex(x => id == (isParent===true ? (isChildTweet ?　x.tweet.id : 　x.id) : (isChildTweet ? x.tweet.in_reply_to_status_id : x.in_reply_to_status_id)))
+							const fi = row.findIndex(x => id == (isParent===true ? (isChildTweet ? x.tweet.id : x.id) : (isChildTweet ? x.tweet.in_reply_to_status_id : x.in_reply_to_status_id)))
 
 							if (-1 == fi) {
 								// not found
