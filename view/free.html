@@ -182,10 +182,16 @@
 					<v-card-title v-if="dialogHelp.title" class="justify-center">{{dialogHelp.title}}</v-card-title>
 					<v-card-subtitle v-if="dialogHelp.subtitle" class="black--text">{{dialogHelp.subtitle}}</v-card-subtitle>
 					<v-card-text class="black--text">
-						「設定→データをダウンロード→アーカイブをダウンロード」でダウンロードしたtweets.jsまたはtweet.jsを元にTLを再現します
-						<br>
-						tweets.jsまたはtweet.jsを配置したアドレスを入力し、諸々の条件を設定してから「Load」を実行してください
-						<br>※階層構造はTwitter公式からダウンロードした直後の状態を保ってください
+						<p>「設定→データをダウンロード→アーカイブをダウンロード」でダウンロードしたtweets.jsまたはtweet.jsを元にTLを再現します</p>
+						<p>tweets.jsまたはtweet.jsを配置したアドレスを入力し、諸々の条件を設定してから「Load」を実行してください</p>
+						<p>※階層構造はTwitter公式からダウンロードした直後の状態を保ってください</p>
+						<p>
+							<pre style="font-family: Roboto,sans-serif;">data
+└ tweets.js || tweet.js
+└ tweets_media || tweet_media
+  └ { media files }</pre>
+						</p>
+						
 						<p class="ma-0"><a href="./index.html" target="_blank">メイン</a>に戻る</p>
 					</v-card-text>
 					<v-divider></v-divider>
@@ -200,7 +206,7 @@
 			<v-dialog v-model="dialogDetail.isShow" persistent>
 				<v-card scrollable>
 					<v-card-title class="justify-end">
-						<v-btn @click="dialogDetail.isShow = false"><v-icon>mdi-cloase</v-icon>閉じる</v-btn>
+						<v-btn text small @click="dialogDetail.isShow = false"><v-icon>mdi-close</v-icon>閉じる</v-btn>
 					</v-card-title>
 					<v-card-text>
 						<v-row v-for="(twd,i) in twDataDetail" :key="'twd-'+i" :id="'twd-' + twd.id" :data-debug="twd.index" class="pa-0 ma-0">
@@ -257,9 +263,9 @@
 											<v-icon color="pink">mdi-heart</v-icon> {{twd.favorite_count}}
 										</v-btn>
 	
-										<v-btn v-if="twd.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#twd-' + twd.in_reply_to_status_id)">
+										<!-- <v-btn v-if="twd.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#twd-' + twd.in_reply_to_status_id)">
 											<v-icon color="primary">mdi-arrow-down-left</v-icon>
-										</v-btn>
+										</v-btn> -->
 	
 									</v-col>
 	
