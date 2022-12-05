@@ -206,9 +206,9 @@
 			<v-dialog v-model="dialogDetail.isShow" persistent>
 				<v-card scrollable>
 					<v-card-title class="justify-end">
-						<v-btn text small @click="dialogDetail.isShow = false"><v-icon>mdi-close</v-icon>閉じる</v-btn>
+						<v-btn text small @click="dialogDetail.isShow = false"><v-icon>mdi-close</v-icon>Close</v-btn>
 					</v-card-title>
-					<v-card-text>
+					<v-card-text class="black--text">
 						<v-row v-for="(twd,i) in twDataDetail" :key="'twd-'+i" :id="'twd-' + twd.id" :data-debug="twd.index" class="pa-0 ma-0">
 							<v-col class="rounded-lg my-3" style="border: 1px solid #999;">
 	
@@ -262,11 +262,7 @@
 										<v-btn color="pink" text x-small :class="'noevent ' + (twd.in_reply_to_status_id ? 'pl-0' : 'px-0')">
 											<v-icon color="pink">mdi-heart</v-icon> {{twd.favorite_count}}
 										</v-btn>
-	
-										<!-- <v-btn v-if="twd.in_reply_to_status_id" color="primary" icon x-small class="pl-0" @click="VuetifyGoTo('#twd-' + twd.in_reply_to_status_id)">
-											<v-icon color="primary">mdi-arrow-down-left</v-icon>
-										</v-btn> -->
-	
+		
 									</v-col>
 	
 								</v-row>
