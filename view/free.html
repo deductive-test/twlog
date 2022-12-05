@@ -417,7 +417,7 @@
 										// debugger
 										// https://deductive-test.github.io/twdata/2022-11-20/data/tweets_media/1593187544082305024-Fhwjn6HagAAsKej.jpg
 										// https://deductive-test.github.io/twdata/2022-11-20/data/tweets.js?_=1670202460703
-										imageName = `${target}/data/tweet${this.input.isTweet ? '' : 's'}_media/${add.id}-`
+										imageName = `${target}/tweet${this.input.isTweet ? '' : 's'}_media/${add.id}-`
 										const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
 										if (mp4) {
 											const mp4l = mp4.url.split('/')
