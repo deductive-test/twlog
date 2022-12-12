@@ -74,7 +74,9 @@
 								<!-- id, RT, Like, Reply -->
 								<v-row dense>
 
-									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">#{{tw.id}}</v-col>
+									<v-col cols="auto" class="grey--text text-caption pr-0" style="align-self: end;">
+										<a :href="`${common.URL.BASE}view/detail.html?target=${input.target}&id=${tw.id}`">#{{tw.id}}</a>
+									</v-col>
 
 									<v-col class="text-end">
 
