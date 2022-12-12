@@ -35,7 +35,7 @@
 					<!-- TL -->
 					<template v-for="(tw,i) in twDataShow">
 						<v-row :key="'tw-'+i" :id="tw.id" :data-debug="tw.index" class="pa-0 ma-0">
-							<v-col class="rounded-lg my-3" style="border: 1px solid #999;">
+							<v-col class="rounded-lg my-3" :style="`border: ${isUrlId(tw.id) ? 2 : 1}px solid ${isUrlId(tw.id) ? '#2196F3' : '#999'};`">
 
 								<!-- date, id -->
 								<v-row dense class="text-caption">
@@ -262,9 +262,22 @@
 					fail=>{},
 					always=>{
 						this.loading = false
+						// first scroll
+						if (this.hasQuery('id')) {
+							this.$nextTick(()=>this.VuetifyGoTo('#' + this.getQuery('id')))
+						}
 					})
 				}, // LoadData
 
+				isUrlId(id){
+					let res = false
+					try {
+						if (this.hasQuery('id')){
+							res = id === this.getQuery('id')
+						}
+					} catch (e) {console.error(e)}
+					return res
+				},
 			}, // methods
 		})
 	</script>
