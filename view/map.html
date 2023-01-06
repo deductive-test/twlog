@@ -149,7 +149,7 @@
 			</v-main>
 
 			<!-- dialogHelp -->
-			<v-dialog v-model="dialogHelp.isShow" :persistent="dialogHelp.persistent" scrollable :width="$vuetify.breakpoint.smAndDown ? null : 400">
+			<v-dialog v-model="dialogHelp.isShow" :persistent="dialogHelp.persistent" scrollable :width="$vuetify.breakpoint.xs ? null : 400">
 				<v-card>
 					<v-card-title v-if="dialogHelp.title" class="justify-center">{{dialogHelp.title}}</v-card-title>
 					<v-card-subtitle v-if="dialogHelp.subtitle" class="black--text">{{dialogHelp.subtitle}}</v-card-subtitle>
