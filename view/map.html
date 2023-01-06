@@ -136,6 +136,15 @@
 						isDebug<br>lastModified: {{common.lastModified}}<br>{{common.URL.href}}<br>
 					</div>
 
+					<!-- fast load -->
+					<div v-if="first" style="opacity: 0;">
+						<img width="10" height="10" :src="`${common.URL.BASE}img/map/circle-slice-8.svg`">
+						<img width="10" height="10" :src="`${common.URL.BASE}img/map/numeric-1-circle.svg`">
+						<img width="10" height="10" :src="`${common.URL.BASE}img/map/numeric-2-circle.svg`">
+						<img width="10" height="10" :src="`${common.URL.BASE}img/map/numeric-3-circle.svg`">
+						<img width="10" height="10" :src="`${common.URL.BASE}img/map/numeric-4-circle.svg`">
+					</div>
+
 				</v-container>
 			</v-main>
 
@@ -238,6 +247,7 @@
 			},
 			data() {
 				return {
+					first:true,
 					loading:true,
 					zoom: 10,
 
@@ -254,8 +264,8 @@
 					},
 
 					freeIcon: {
-						disp: false,
-						latLng: [],
+						disp: true,
+						latLng: [0,0],
 					},
 
 					pointMax:4,
