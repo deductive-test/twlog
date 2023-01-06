@@ -66,7 +66,7 @@
 											</v-card-text>
 											<v-card-actions class="pa-0">
 												<v-spacer></v-spacer>
-												<v-btn v-for="(n1,ni1) in pointMax" :key="'n1-' + ni1" x-small dark color="primary" @click="setPoints(n1 - 1, localePoint.latLng)">{{n1}}</v-btn>
+												<v-btn v-for="(n1,ni1) in pointMax" :key="'n1-' + ni1" x-small dark :color="points[ni1].disp ? 'light-green' : 'primary'" @click="setPoints(n1 - 1, localePoint.latLng)">{{n1}}</v-btn>
 												<v-spacer></v-spacer>
 											</v-card-actions>
 										</v-card>
@@ -100,7 +100,7 @@
 										<v-card flat>
 											<v-card-actions class="pa-0">
 												<v-spacer></v-spacer>
-												<v-btn v-for="(n2,ni2) in pointMax" :key="'n2-' + ni2" x-small dark color="primary" @click="setPoints(n2 - 1, freeIcon.latLng)">{{n2}}</v-btn>
+												<v-btn v-for="(n2,ni2) in pointMax" :key="'n2-' + ni2" x-small dark :color="points.length > 0 && points[ni2].disp ? 'light-green' : 'primary'" @click="setPoints(n2 - 1, freeIcon.latLng)">{{n2}}</v-btn>
 												<v-spacer></v-spacer>
 											</v-card-actions>
 										</v-card>
