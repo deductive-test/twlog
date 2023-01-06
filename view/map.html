@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<title>map</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+	
+	<link rel="shortcut icon" href="../img/favicon.png">
+
+	<link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.x/css/materialdesignicons.min.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.min.css" rel="stylesheet">
+	<link href="../css/common.css" rel="stylesheet">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+	<link rel="stylesheet" href="//unpkg.com/leaflet/dist/leaflet.css" />
+	<script src="//unpkg.com/leaflet/dist/leaflet.js"></script>
+	<script src="//unpkg.com/vue2-leaflet"></script>
+
+</head>
+
+<body>
+	<div id="app" v-cloak>
+		<v-app>
+
+			<v-main>
+				<v-container>
+
+					<v-row class="aic" dense>
+						<v-col class="text-center pl-10 pr-0 pb-0">
+							<v-icon color="#7CB342">mdi-sprout</v-icon>
+							&nbsp;
+							<span style="font-size: 1.35rem; vertical-align: sub;">おさんぽ まっぷ</span>
+							&nbsp;
+							<v-icon color="#7CB342">mdi-sprout</v-icon>
+						</v-col>
+						<v-col cols="auto">
+							<v-btn icon @click="dialogHelp.isShow=true">
+								<v-icon>mdi-information-outline</v-icon>
+							</v-btn>
+						</v-col>
+					</v-row>
+
+					<v-row class="mt-0">
+
+						<!-- map -->
+						<v-col
+							:cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
+							:style="`height: ${$vuetify.breakpoint.smAndDown ? '100vw' : 'calc(100vh - 50px)'}; width: 100%; z-index: 1;`"
+						>
+
+							<l-map :zoom="zoom" :max-zoom="18" :bounds="bounds" :options="{tap:false}" @click="mapClick">
+
+								<l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" :attribution="attribution"></l-tile-layer>
+
+								<l-control-scale position="bottomleft" :imperial="false" :metric="true"></l-control-scale>
+
+								<!-- marker-popup: locale -->
+								<l-marker v-if="localePoint.disp" id="localemarker" ref="localemarker" :lat-lng="localePoint.latLng">
+									<l-popup v-show="localePoint.disp">
+										<v-card flat>
+											<v-card-title class="pa-0 justify-center">locale</v-card-title>
+											<v-card-text class="pa-0 text-center">
+											</v-card-text>
+											<v-card-actions class="pa-0">
+												<v-spacer></v-spacer>
+												<v-btn v-for="n in pointMax" x-small dark color="primary" @click="setPoints(n-1, localePoint.latLng)">{{n}}</v-btn>
+												<v-spacer></v-spacer>
+											</v-card-actions>
+										</v-card>
+									</l-popup>
+								</l-marker>
+
+								<!-- marker-popup: points -->
+								<template v-for="(p ,pi) in points">
+									<l-marker v-if="p.disp" :key="'points-'+pi" :id="`p${pi}`" :ref="`pointmarker${pi}`" :lat-lng="p.latLng">
+										<l-icon :icon-url="`${common.URL.BASE}img/map/numeric-${pi+1}-circle.svg`" :icon-anchor="[15, 15]" :popup-anchor="[0, -15]" :icon-size="[30, 30]"></l-icon>
+										<l-popup>
+											<v-card flat>
+												<v-card-actions class="pa-0">
+													<v-spacer></v-spacer>
+													<v-btn x-small dark color="error" @click="p.disp = false">delete</v-btn>
+													<v-spacer></v-spacer>
+												</v-card-actions>
+											</v-card>
+										</l-popup>
+									</l-marker>
+								</template>
+
+								<!-- points polyline white fill-color="#C0CA33" fill -->
+								<l-polyline v-for="(l1 ,li1) in polylines" :key="'line1-'+li1" :lat-lngs="l1.latLng" color="#fff" :weight="8"></l-polyline>
+								<l-polyline v-for="(l2 ,li2) in polylines" :key="'line2-'+li2" :lat-lngs="l2.latLng" color="#999" dash-array="10" dash-offset="5" :weight="4"></l-polyline>
+
+								<!-- marker-popup: click -->
+								<l-marker v-if="freeIcon.disp" id="freemarker" ref="freemarker" :lat-lng="freeIcon.latLng">
+									<l-icon :icon-url="`${common.URL.BASE}img/map/circle-slice-8.svg`" :icon-anchor="[10, 20]" :popup-anchor="[0, -20]" :icon-size="[20, 20]"></l-icon>
+									<l-popup v-show="freeIcon.disp">
+										<v-card flat>
+											<v-card-actions class="pa-0">
+												<v-spacer></v-spacer>
+												<v-btn v-for="n in pointMax" x-small dark color="primary" @click="setPoints(n-1, freeIcon.latLng)">{{n}}</v-btn>
+												<v-spacer></v-spacer>
+											</v-card-actions>
+										</v-card>
+									</l-popup>
+								</l-marker>
+
+							</l-map>
+						</v-col>
+
+						<!-- info -->
+						<v-col :class="$vuetify.breakpoint.smAndDown ? 'pt-0' : ''">
+
+							<v-row dense v-for="(r,ri) in polylines" :key="'result'+ri">
+								<v-col cols="2">{{r.start + 1}} -> {{r.end + 1}}:</v-col>
+								<v-col>{{formatDistance(r.distance)}}</v-col>
+							</v-row>
+
+							<v-row dense>
+								<v-col cols="2">total:</v-col>
+								<v-col>{{formatDistance(totalDistance)}}</v-col>
+							</v-row>
+
+							<v-row dense v-if="-1 < points.findIndex(x => x.disp)">
+								<v-col>
+									<v-btn small dark color="error" @click="deleteAllPoints">delete all</v-btn>
+								</v-col>
+							</v-row>
+						</v-col>
+
+					</v-row>
+
+					<div v-show="common.isDebug" style="word-break: break-all;">
+						isDebug<br>lastModified: {{common.lastModified}}<br>{{common.URL.href}}<br>
+					</div>
+
+				</v-container>
+			</v-main>
+
+			<!-- dialogHelp -->
+			<v-dialog v-model="dialogHelp.isShow" :persistent="dialogHelp.persistent" scrollable :width="$vuetify.breakpoint.smAndDown ? null : 400">
+				<v-card>
+					<v-card-title v-if="dialogHelp.title" class="justify-center">{{dialogHelp.title}}</v-card-title>
+					<v-card-subtitle v-if="dialogHelp.subtitle" class="black--text">{{dialogHelp.subtitle}}</v-card-subtitle>
+					<v-divider></v-divider>
+					<v-card-text class="black--text pa-3">
+						<p class="ma-0 text-center">🌱 これなに 🌱</p>
+						<p class="text-center">
+							刀剣男士 と おさんぽ するとき
+							<br>
+							まっぷ を くりっく して
+							<br>
+							近侍ピン を さしてね
+							<br>
+							きょり が でるよ
+							<br>
+							おさんぽ たのしー
+						</p>
+
+						<p class="ma-0 text-center">🌱 ぽいんとだして 🌱</p>
+						<p class="text-center">
+							わかる
+							<br>
+							むずかし ごめ
+						</p>
+						
+						<p class="ma-0 text-center">🌱 Author 🌱</p>
+						<p class="text-center">
+							<a href="https://twitter.com/deductive_test" target="_blank">@deductive_test</a>
+						</p>
+
+					</v-card-text>
+					<v-divider></v-divider>
+					<v-card-actions>
+						<v-spacer></v-spacer>
+						<v-btn text @click="dialogHelp.isShow = false">Close</v-btn>
+						<v-spacer></v-spacer>
+					</v-card-actions>
+				</v-card>
+			</v-dialog>
+
+			<!-- loading -->
+			<my-loading :overlay="loading"></my-loading>
+
+		</v-app>
+	</div>
+
+	<script src="../js/mixins.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+	<script src="../js/lib/httpVueLoader@1.4.2.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vuetify@2.x/dist/vuetify.js"></script>
+	<script>
+		const vm = new Vue({
+			el: '#app',
+			vuetify: new Vuetify(),
+			mixins:[myMixins],
+			components:{
+				'my-loading':httpVueLoader(`${common.URL.BASE}components/loading.vue?_=${(new Date()).getTime()}`),
+
+				'l-map': Vue2Leaflet.LMap,
+				'l-tile-layer': Vue2Leaflet.LTileLayer,
+				'l-control-scale': Vue2Leaflet.LControlScale,
+				'l-marker': Vue2Leaflet.LMarker,
+				'l-icon': Vue2Leaflet.LIcon,
+				'l-popup': Vue2Leaflet.LPopup,
+				'l-polyline': Vue2Leaflet.LPolyline,
+			},
+			computed: {
+				polylines(){
+					let res = []
+					try {
+						for (let i = 0; i < this.points.length - 1; i++) {
+							if (this.points[i].disp && this.points[i+1].disp){
+								res.push({
+									start: i,
+									end: i+1,
+									distance: this.calcLocaledistance(this.points[i].latLng[0], this.points[i].latLng[1], this.points[i + 1].latLng[0], this.points[i + 1].latLng[1]),
+									latLng: [this.points[i].latLng, this.points[i + 1].latLng],
+								})
+							}
+						}
+					} catch (e) { console.error(e) }
+					return res
+				},
+
+				totalDistance(){
+					let res = 0
+					try {
+						for (let i = 0; i < this.polylines.length; i++) {
+							res += this.polylines[i].distance
+						}
+					} catch (e) { console.error(e) }
+					return res
+				},
+
+			},
+			data() {
+				return {
+					loading:true,
+					zoom: 10,
+
+					// first bounds japan tokyo
+					jpTokyo: [35.681064426499944, 139.76717991617488],
+					bounds:[[35.681064426499944, 139.76717991617488]],
+
+					attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+
+					localePoint:{
+						disp: false,
+						latLng: [],
+						coords:{},
+					},
+
+					freeIcon: {
+						disp: false,
+						latLng: [],
+					},
+
+					pointMax:4,
+					points:[], // disp, latLng
+			
+					dialogHelp: {
+						isShow: false,
+						persistent: false,
+						title: 'About',
+						subtitle: '',
+					},
+
+				}
+			},
+			mounted(){
+				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [index] mounted`)
+				this.init()
+				this.loading = false
+			}, // mounted
+			methods: {
+
+				init () {
+					for (let i = 0; i < this.pointMax; i++) {
+						this.points.push({
+							disp: false,
+							latLng: this.jpTokyo,
+						})
+					}
+
+					// get locale
+					navigator.geolocation.getCurrentPosition(
+						resolve=>{
+							if (resolve != null && resolve.coords != null) {
+								// success
+								this.localePoint.coords = {
+									accuracy: resolve.coords.accuracy,
+									altitude: resolve.coords.altitude,
+									altitudeAccuracy: resolve.coords.altitudeAccuracy,
+									heading: resolve.coords.heading,
+									latitude: resolve.coords.latitude,
+									longitude: resolve.coords.longitude,
+									speed: resolve.coords.speed,
+								}
+								this.localePoint.latLng = [this.localePoint.coords.latitude, this.localePoint.coords.longitude]
+								this.bounds = [this.localePoint.latLng]
+								this.localePoint.disp = true
+
+							} else {
+								// error(resolve)
+								console.error(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} get locale error (resolve)`)
+								console.error(resolve)
+								this.localePoint.latLng = {
+									latitude: this.jpTokyo[0],
+									longitude: this.jpTokyo[1],
+								}
+							}
+						}, 
+						reject=>{
+							// error(reject)
+							console.error(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} get locale error (reject)`)
+							console.error(reject)
+							this.localePoint.latLng = {
+								latitude: this.jpTokyo[0],
+								longitude: this.jpTokyo[1],
+							}
+						}, Object.assign({ timeout: 5000 }, {}))
+				},
+
+				mapClick(e) {
+					console.log(e)
+
+					this.freeIcon.disp = false
+
+					this.freeIcon.latLng = [e.latlng.lat, e.latlng.lng]
+					this.freeIcon.disp = true
+
+					this.$nextTick(() => {
+						this.$refs.freemarker.mapObject.openPopup()
+					})
+				},
+
+				setPoints(i, latLng){
+					this.points[i].disp = false
+
+					this.points[i].latLng = latLng
+					this.points[i].disp = true
+
+					this.$nextTick(() => {
+						this.freeIcon.disp = false
+					})
+				},
+
+				deleteAllPoints(){
+					for (let i = 0; i < this.points.length; i++) {
+						this.points[i].disp = false
+					}
+				},
+
+				calcLocaledistance(lat1, lng1, lat2, lng2) {
+					const R = Math.PI / 180;
+					lat1 *= R;
+					lng1 *= R;
+					lat2 *= R;
+					lng2 *= R;
+					return 6371 * Math.acos(Math.cos(lat1) * Math.cos(lat2) * Math.cos(lng2 - lng1) + Math.sin(lat1) * Math.sin(lat2)) * 1000;
+				},
+
+				formatDistance(distance){
+					let res = 'error'
+					try {
+						res = (distance / 1000).toLocaleString() + ' km'
+					} catch (e) { console.error(e) }
+					return res
+				},
+
+			}, // methods
+		})
+	</script>
+</body>
+
+</html>
