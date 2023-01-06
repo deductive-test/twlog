@@ -144,6 +144,8 @@ const myMixins = {
 		selected() {
 			let res = {}
 			try {
+				if (!this.selectDate || !this.input || !this.input.target) return null
+
 				if (-1 < this.selectDate.findIndex(x => x.value == this.input.target)) {
 					res = JSON.parse(JSON.stringify(this.selectDate.find(x => x.value == this.input.target)))
 				}
