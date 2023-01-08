@@ -89,7 +89,7 @@
 									</l-marker>
 								</template>
 
-								<!-- points polyline white fill-color="#C0CA33" fill -->
+								<!-- points polyline -->
 								<l-polyline v-for="(l1 ,li1) in polylines" :key="'line1-'+li1" :lat-lngs="l1.latLng" color="#fff" :weight="8"></l-polyline>
 								<l-polyline v-for="(l2 ,li2) in polylines" :key="'line2-'+li2" :lat-lngs="l2.latLng" color="#999" dash-array="10" dash-offset="5" :weight="4"></l-polyline>
 
