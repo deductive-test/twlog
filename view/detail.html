@@ -232,7 +232,7 @@
 										if (mp4) {
 											const mp4l = mp4.url.split('/')
 											imageName += mp4l[mp4l.length - 1]
-											imageName = imageName.split('?tag=12').join('')
+											imageName = imageName.split('?tag=12').join('').split('?tag=10').join('')
 										} else {
 											// debugger
 											// 2020-05-31 1231733838700695552-ndpQjR-hrkz8dsMc.mp4
