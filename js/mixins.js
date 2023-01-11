@@ -110,6 +110,7 @@ const myMixins = {
 					value: '2020-10-13',
 					data: {
 						isTweet: true,
+						isChildTweet: true,
 					},
 				},
 				{
