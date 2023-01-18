@@ -59,11 +59,16 @@
 					v-bind:href="tm"
 					target="_blank"
 				>
-					<video v-if="tm.slice(-4) == '.mp4'" :src="tm" style="width:20vw;height:20vw;"></video>
+					<video
+						v-if="tm.slice(-4) == '.mp4'"
+						:src="tm"
+						style="width:20vw;height:20vw;border: 1px solid #ccc;object-fit:cover;"
+						loading="lazy"
+						></video>
 					<img
 						v-else
 						v-bind:src="tm"
-						style="width:20vw;height:20vw;object-fit: contain;"
+						style="width:20vw;height:20vw;border: 1px solid #ccc;object-fit:cover;"
 						loading="lazy"
 					>
 				</p>
@@ -206,12 +211,12 @@
 							rowTw.extended_entities.media.forEach((m, mi) => {
 
 								const sl = m.media_url.split('/')
-								let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${sd.data.isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`
+								let imageName = `${this.common.URL.TWDATA}${sd.value}/data/tweet${sd.data.isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`
 
 								// video
 								if (m.type == 'video' && m.video_info) {
 									// debugger
-									imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${sd.data.isTweet ? '' : 's'}_media/${add.id}-`
+									imageName = `${this.common.URL.TWDATA}${sd.value}/data/tweet${sd.data.isTweet ? '' : 's'}_media/${add.id}-`
 									const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
 									if (mp4) {
 										const mp4l = mp4.url.split('/')
