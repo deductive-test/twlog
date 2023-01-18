@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<title>twitter log light</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+	
+	<link rel="shortcut icon" href="../img/favicon.png">
+
+	<link href="../css/common.css" rel="stylesheet">
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+	<div id="app" v-cloak>
+
+		<!-- Search -->
+		<div>
+			<input type="text" v-model="input.keyword" placeholder="keyword">
+			<br>
+			RT: <input type="number" v-model="input.rt" placeholder="RT" min="0" max="9999">
+			Like: <input type="number" v-model="input.like" placeholder="Like" min="0" max="9999">
+			<br>
+			from: <input type="date" v-model="input.from" :max="maxFrom" :min="minFrom">
+			to: <input type="date" v-model="input.to" :max="maxTo" :min="minTo">
+			<br>
+			<label><input type="checkbox" v-model="input.showDesc">desc</label>
+			<br>
+			<button @click="search">search</button>
+			<button @click="clearSearch">clear</button>
+		</div>
+
+		<!-- loading, TL count -->
+		<table>
+			<tr>
+				<td v-if="loading">loading...</td>
+				<td>{{page.searched.toLocaleString()}} / {{twData.length.toLocaleString()}}</td>
+			</tr>
+		</table>
+
+		<!-- TL -->
+		<div v-for="(tw,i) in twDataShow" :id="tw.id" :data-debug="tw.index">
+			<hr>
+			<p>{{tw.created_at_str}} [{{tw.index}}]</p>
+			<p style="white-space: pre-wrap;">{{tw.full_text}}</p>
+			<template v-if="tw.entities.urls && tw.entities.urls.length > 0">
+				<p v-for="(url,urli) in tw.entities.urls" :key="'url-'+urli">
+					<a :href="url.expanded_url" target="_blank">{{url.display_url}}</a>
+				</p>
+			</template>
+			<p v-if="tw.customImg && tw.customImg.length > 0">
+				<a
+					v-for="(tm, tmIndex) in tw.customImg"
+					v-bind:key="`media-${tw.id}-${tmIndex}`"
+					v-bind:href="tm"
+					target="_blank"
+				>
+					<video v-if="tm.slice(-4) == '.mp4'" :src="tm" style="width:20vw;height:20vw;"></video>
+					<img
+						v-else
+						v-bind:src="tm"
+						style="width:20vw;height:20vw;object-fit: contain;"
+						loading="lazy"
+					>
+				</p>
+			</a>
+			<p>RT: {{tw.retweet_count}} / Like: {{tw.favorite_count}}
+				<span v-if="tw.in_reply_to_status_id">
+					/ <a :href="'#' + tw.in_reply_to_status_id">{{input.showDesc ? '↓' : '↑'}}</a></p>
+				</span>
+			<p>ID: #{{tw.id}}</p>
+		</div>
+
+		<div v-if="twData && page.no * page.max < twData.length && twDataShow.length < page.searched">
+			<button @click="showMore">show more</button>
+		</div>
+
+	</div>
+
+	<style>
+		[data-debug] p {
+			margin:0;
+		}
+	</style>
+
+	<script src="../js/mixins.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+	<script src="../js/lib/httpVueLoader@1.4.2.js"></script>
+	<script>
+		const app = new Vue({
+			el: '#app',
+			mixins:[myMixins],
+			components:{
+			},
+			computed: {
+			},
+			data() {
+				return {
+					loading:true,
+
+					input:{
+						target:'',
+						free:'',
+						showDesc:true,
+						keyword:'',
+						rt:0,
+						like:0,
+						from:'',
+						to:'',
+						media:false,
+					},
+
+					minFrom:'2019-01-01',
+					maxFrom:'2999-12-31',
+					minTo:'2019-01-01',
+					maxTo:'2999-12-31',
+					
+					twData:[],
+					twDataShow:[],
+
+					page: {
+						no: 1, // start at 1
+						max: 9999999999,
+						searched: 0,
+					},
+				}
+			},
+			mounted(){
+				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [index] mounted`)
+				this.LoadDataAll()
+			}, // mounted
+			methods: {
+				async LoadDataAll(){
+					for (let i = 0; i < this.selectDate.length; i++) {
+
+						try {
+							let res = await $.ajax({
+								type: 'GET',
+								url: `${this.common.URL.TWDATA}${this.selectDate[i].value}/data/tweet${this.selectDate[i].data.isTweet === true ? '' : 's'}.js`,
+								dataType: 'text',
+							})
+							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [${i}] success`)
+
+							this.readResponse(this.selectDate[i],res)
+
+						} catch (e) {
+							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [${i}] error`)
+						}
+
+						await this.sleep(10)
+
+					}
+					this.loading = false
+				},
+
+				/** read ajax response
+				 * @param {object} sd selectDate[i]
+				 * @param {string} done tweet.js / tweets.js text
+				*/
+				readResponse(sd,done){
+					// debugger
+					let txt = done.replace(`window.YTD.tweet${sd.data.isTweet ? '' : 's'}.part0 = `, '')
+					let row = JSON.parse(txt)
+
+					// sort
+					row = row.sort((a, b) => new Date(sd.data.isChildTweet ? a.tweet.created_at : a.created_at) > new Date(sd.data.isChildTweet ? b.tweet.created_at : b.created_at) ? -1 : 1)
+
+					for (let i = 0; i < row.length; i++) {
+
+						const rowTw = sd.data.isChildTweet ? row[i].tweet : row[i]
+
+						if (-1 < this.twData.findIndex(x => x.id == rowTw.id)){
+							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} ${sd.value} [${i}] dup dup`)
+							continue
+						}
+
+						let add = {}
+						add.id = rowTw.id
+						add.index = this.twData.length
+						add.in_reply_to_status_id = rowTw.in_reply_to_status_id
+
+						// date
+						add.created_at = new Date(rowTw.created_at)
+						add.created_at_str = this.FormatDate(add.created_at, '/', true, true)
+
+						// full_text (url replace)
+						add.full_text = rowTw.full_text
+						add.entities = { urls: [] }
+						if (rowTw.entities.urls && rowTw.entities.urls.length > 0) {
+							add.entities.urls = rowTw.entities.urls
+							add.entities.urls.forEach((val, i) => {
+								if (add.full_text.includes(val.url)) {
+									add.full_text = add.full_text.replace(val.url, '')
+								}
+							})
+						}
+
+						// media
+						add.customImg = []
+						if (rowTw.extended_entities && rowTw.extended_entities.media && rowTw.extended_entities.media.length > 0 && !rowTw.full_text.includes('RT @')) {
+							//debugger
+							rowTw.extended_entities.media.forEach((m, mi) => {
+
+								const sl = m.media_url.split('/')
+								let imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${sd.data.isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`
+
+								// video
+								if (m.type == 'video' && m.video_info) {
+									// debugger
+									imageName = `${this.common.URL.TWDATA}${this.input.target}/data/tweet${sd.data.isTweet ? '' : 's'}_media/${add.id}-`
+									const mp4 = m.video_info.variants.find(x => x.bitrate == "2176000")
+									if (mp4) {
+										const mp4l = mp4.url.split('/')
+										imageName += mp4l[mp4l.length - 1]
+										imageName = imageName.split('?tag=12').join('').split('?tag=10').join('')
+									} else {
+										// debugger
+										// 2020-05-31 1231733838700695552-ndpQjR-hrkz8dsMc.mp4
+										const mp4_2 = m.video_info.variants.find(x => x.bitrate == "832000")
+										if (mp4_2) {
+											const mp4l_2 = mp4_2.url.split('/')
+											imageName += mp4l_2[mp4l_2.length - 1]
+											imageName = imageName.split('?tag=10').join('')
+										}
+									}
+								}
+
+								add.customImg.push(imageName)
+							})
+						}
+
+						// RT, Like
+						add.retweet_count = !isNaN(rowTw.retweet_count) ? Number(rowTw.retweet_count) : 0
+						add.favorite_count = !isNaN(rowTw.favorite_count) ? Number(rowTw.favorite_count) : 0
+
+						this.twData.push(add)
+					} // for
+
+					this.page.searched = this.twData.length
+					const dp = JSON.parse(JSON.stringify(this.twData))
+					this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
+
+					this.maxFrom = this.FormatDate(this.twData[0].created_at, '-')
+					this.maxTo = this.FormatDate(this.twData[0].created_at, '-')
+					this.minFrom = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
+					this.minTo = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
+
+				},
+
+				search(isPageAdd){
+					this.loading = true
+					let res = []
+					this.twDataShow =[]
+					this.page.no = isPageAdd === true ? this.page.no : 1
+					try {
+						res = JSON.parse(JSON.stringify(this.twData))
+
+						if (this.input.keyword) {
+							res = res.filter(x => x.full_text && x.full_text.includes(this.input.keyword))
+						}
+
+						if(this.input.rt && !isNaN(this.input.rt)){
+							res = res.filter(x => this.input.rt <= x.retweet_count)
+						}
+
+						if(this.input.like && !isNaN(this.input.like)){
+							res = res.filter(x => this.input.like <= x.favorite_count)
+						}
+
+						if(!this.NullOrWhiteSpace(this.input.from) && this.isDate(this.input.from.split('-').join('/'))){
+							const df = new Date(this.input.from.split('-').join('/'))
+							res = res.filter(x => df <= new Date(x.created_at))
+						}
+
+						if(!this.NullOrWhiteSpace(this.input.to) && this.isDate(this.input.to.split('-').join('/'))){
+							let dt = new Date(this.input.to.split('-').join('/'))
+							dt.setDate(dt.getDate() + 1)
+							res = res.filter(x => new Date(x.created_at) < dt)
+						}
+
+						if(this.input.media === true){
+							res = res.filter(x => x.customImg && x.customImg.length > 0)
+						}
+
+						res = res.sort((a,b)=> this.input.showDesc === true
+							? a.created_at > b.created_at ? -1 : 1
+							: a.created_at > b.created_at ? 1 : -1
+						)
+
+					} catch (e) {console.error(e)}
+					this.twDataShow = res.slice(0, this.page.no * this.page.max < res.length ? this.page.no * this.page.max : res.length)
+					this.page.searched = res.length
+					this.loading = false
+				}, // search
+
+				clearSearch() {
+					this.input = {
+						target: '',
+						free: '',
+						showDesc: true,
+						keyword: '',
+						rt: 0,
+						like: 0,
+						from: '',
+						to: '',
+						media: false,
+					}
+				},
+
+				showMore(){
+					this.page.no += 1
+					this.search(true)
+					// const dp = JSON.parse(JSON.stringify(this.twData))
+					// this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
+				},
+			}, // methods
+		})
+	</script>
+</body>
+
+</html>
