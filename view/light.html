@@ -67,7 +67,7 @@
 
 			<template v-if="tw.entities.urls && tw.entities.urls.length > 0">
 				<p v-for="(url,urli) in tw.entities.urls" :key="'url-'+urli">
-					<a :href="url.expanded_url" target="_blank">{{url.expanded_url}}</a>
+					<a :href="url.expanded_url" :target="url.expanded_url.indexOf('http') != 0 ? null :  '_blank'">{{url.expanded_url}}</a>
 				</p>
 			</template>
 
@@ -279,10 +279,12 @@
 							})
 						}
 
+
 						// RT, Like
 						add.retweet_count = !isNaN(rowTw.retweet_count) ? Number(rowTw.retweet_count) : 0
 						add.favorite_count = !isNaN(rowTw.favorite_count) ? Number(rowTw.favorite_count) : 0
 
+						add.full_text = this.UnescapeHTML(add.full_text)
 						this.twData.push(add)
 					} // for
 
