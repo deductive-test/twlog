@@ -32,26 +32,45 @@
 			<br>
 			<button @click="search">search</button>
 			<button @click="clearSearch">clear</button>
+			<button v-if="!showInfo" @click="showInfo=true"> ? </button>
+		</div>
+
+		<!-- info -->
+		<div v-if="showInfo">
+			「設定→データをダウンロード→アーカイブをダウンロード」でダウンロードしたjsonを元にTLを再現します
+			<br>
+			限界までレンダリング負荷を下げ、過去のTLを全件表示します
+			<br>
+			<a href="./index.html" target="_blank">高機能版</a>
+			<br>
+			<a href="./free.html" target="_blank">フリーアドレス版</a>
+			<br>
+			Author: <a href="https://twitter.com/deductive_test" target="_blank">@deductive_test</a>
+			<br>
+			<button @click="showInfo=false">close</button>
+			<hr>
 		</div>
 
 		<!-- loading, TL count -->
-		<table>
-			<tr>
-				<td v-if="loading">loading...</td>
-				<td>{{page.searched.toLocaleString()}} / {{twData.length.toLocaleString()}}</td>
-			</tr>
-		</table>
+		<div>
+			<span v-if="loading">loading...  </span>
+			<span>{{page.searched.toLocaleString()}} / {{twData.length.toLocaleString()}}</span>
+		</div>
 
 		<!-- TL -->
 		<div v-for="(tw,i) in twDataShow" :id="tw.id" :data-debug="tw.index">
 			<hr>
-			<p>{{tw.created_at_str}} [{{tw.index}}]</p>
-			<p style="white-space: pre-wrap;">{{tw.full_text}}</p>
+
+			<p class="psmall">{{tw.created_at_str}}  [{{tw.index}}]</p>
+
+			<p style="white-space: pre-wrap; margin: 3px 0;">{{tw.full_text}}</p>
+
 			<template v-if="tw.entities.urls && tw.entities.urls.length > 0">
 				<p v-for="(url,urli) in tw.entities.urls" :key="'url-'+urli">
 					<a :href="url.expanded_url" target="_blank">{{url.expanded_url}}</a>
 				</p>
 			</template>
+
 			<p v-if="tw.customImg && tw.customImg.length > 0">
 				<a
 					v-for="(tm, tmIndex) in tw.customImg"
@@ -73,11 +92,14 @@
 					>
 				</p>
 			</a>
-			<p>RT: {{tw.retweet_count}} / Like: {{tw.favorite_count}}
-				<span v-if="tw.in_reply_to_status_id">
-					/ <a :href="'#' + tw.in_reply_to_status_id">{{input.showDesc ? '↓' : '↑'}}</a></p>
+
+			<p class="psmall">
+				RT: {{tw.retweet_count}} / Like: {{tw.favorite_count}}
+				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.showDesc ? '↓' : '↑'}}</a>
 				</span>
-			<p>ID: #{{tw.id}}</p>
+				<span>  #{{tw.id}}</span>
+			</p>
+
 		</div>
 
 		<div v-if="twData && page.no * page.max < twData.length && twDataShow.length < page.searched">
@@ -92,6 +114,7 @@
 			word-wrap: break-word;
 			word-break: break-all;
 		}
+		.psmall {font-size: small;}
 	</style>
 
 	<script src="../js/mixins.js"></script>
@@ -108,6 +131,7 @@
 			data() {
 				return {
 					loading:true,
+					showInfo: false,
 
 					input:{
 						target:'',
@@ -161,6 +185,12 @@
 						await this.sleep(10)
 
 					}
+
+					this.maxFrom = this.FormatDate(this.twData[0].created_at, '-')
+					this.maxTo = this.FormatDate(this.twData[0].created_at, '-')
+					this.minFrom = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
+					this.minTo = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
+
 					this.loading = false
 				},
 
@@ -249,14 +279,7 @@
 					} // for
 
 					this.page.searched = this.twData.length
-					const dp = JSON.parse(JSON.stringify(this.twData))
-					this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
-
-					this.maxFrom = this.FormatDate(this.twData[0].created_at, '-')
-					this.maxTo = this.FormatDate(this.twData[0].created_at, '-')
-					this.minFrom = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
-					this.minTo = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
-
+					this.twDataShow = this.twData.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
 				},
 
 				search(isPageAdd){
@@ -326,6 +349,7 @@
 					// const dp = JSON.parse(JSON.stringify(this.twData))
 					// this.twDataShow = dp.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
 				},
+
 			}, // methods
 		})
 	</script>
