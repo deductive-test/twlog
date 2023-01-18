@@ -19,10 +19,10 @@
 
 		<!-- Search -->
 		<div>
-			<input type="text" v-model="input.keyword" placeholder="keyword">
+			<input type="text" v-model="input.keyword" placeholder="keyword" @keydown.enter="search">
 			<br>
-			RT: <input type="number" v-model="input.rt" placeholder="RT" min="0" max="9999">
-			Like: <input type="number" v-model="input.like" placeholder="Like" min="0" max="9999">
+			RT: <input type="number" v-model="input.rt" placeholder="RT" min="0" max="9999" @keydown.enter="search">
+			Like: <input type="number" v-model="input.like" placeholder="Like" min="0" max="9999" @keydown.enter="search">
 			<br>
 			from: <input type="date" v-model="input.from" :max="maxFrom" :min="minFrom">
 			to: <input type="date" v-model="input.to" :max="maxTo" :min="minTo">
@@ -41,7 +41,7 @@
 			<br>
 			限界までレンダリング負荷を下げ、過去のTLを全件表示します
 			<br>
-			<a href="./index.html" target="_blank">高機能版</a>
+			<a href="./index.html" target="_blank">リッチ版</a>
 			<br>
 			<a href="./free.html" target="_blank">フリーアドレス版</a>
 			<br>
@@ -95,7 +95,8 @@
 
 			<p class="psmall">
 				RT: {{tw.retweet_count}} / Like: {{tw.favorite_count}}
-				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.showDesc ? '↓' : '↑'}}</a>
+				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.showDesc ? '↓' : '↑'}}</a></span>
+				<span v-if="tw.reply_to_me_id"> / <a :href="'#' + tw.reply_to_me_id">{{input.showDesc ? '↑' : '↓'}}</a>
 				</span>
 				<span>  #{{tw.id}}</span>
 			</p>
@@ -192,6 +193,23 @@
 					this.minTo = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
 
 					this.loading = false
+
+					if (!this.NullOrWhiteSpace(location.hash)){
+						$(window).scrollTop($(location.hash).position().top)
+					}
+
+					this.searchInReply()
+				},
+
+				searchInReply(i, id, isParent = true){
+					for (let i = 0; i < this.twData.length; i++) {
+						if (this.NullOrWhiteSpace(this.twData[i].in_reply_to_status_id)) continue
+
+						const fi = this.twData.findIndex(x => this.twData[i].in_reply_to_status_id == x.id)
+						if (-1 < fi) {
+							this.twData[fi].reply_to_me_id = this.twData[i].id
+						}
+					}
 				},
 
 				/** read ajax response
@@ -284,6 +302,8 @@
 						add.retweet_count = !isNaN(rowTw.retweet_count) ? Number(rowTw.retweet_count) : 0
 						add.favorite_count = !isNaN(rowTw.favorite_count) ? Number(rowTw.favorite_count) : 0
 
+						add.selectDate = JSON.parse(JSON.stringify(sd))
+						add.reply_to_me_id = ''
 						add.full_text = this.UnescapeHTML(add.full_text)
 						this.twData.push(add)
 					} // for
