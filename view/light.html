@@ -232,6 +232,14 @@
 							add.entities.urls.forEach((val, i) => {
 								if (add.full_text.includes(val.url)) {
 									add.full_text = add.full_text.replace('\n' + val.url, '').replace(val.url, '')
+
+									// RT with comment to oneself
+									if (val.expanded_url.includes('https://twitter.com/deductive_test/status/')) {
+										const urlPath = val.expanded_url.split('/')
+										val.url = '#' + urlPath[urlPath.length - 1]
+										val.expanded_url = val.url
+									}
+
 								}
 							})
 						}
