@@ -408,6 +408,7 @@
 							if (rowTw.extended_entities && rowTw.extended_entities.media && rowTw.extended_entities.media.length > 0 && !rowTw.full_text.includes('RT @')) {
 								//debugger
 								rowTw.extended_entities.media.forEach((m,mi)=>{
+									add.full_text = add.full_text.replace(m.url, '')
 
 									const sl = m.media_url.split('/')
 									let imageName = `${target}tweet${this.input.isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`

@@ -49,7 +49,7 @@
 			<p style="white-space: pre-wrap;">{{tw.full_text}}</p>
 			<template v-if="tw.entities.urls && tw.entities.urls.length > 0">
 				<p v-for="(url,urli) in tw.entities.urls" :key="'url-'+urli">
-					<a :href="url.expanded_url" target="_blank">{{url.display_url}}</a>
+					<a :href="url.expanded_url" target="_blank">{{url.expanded_url}}</a>
 				</p>
 			</template>
 			<p v-if="tw.customImg && tw.customImg.length > 0">
@@ -89,6 +89,8 @@
 	<style>
 		[data-debug] p {
 			margin:0;
+			word-wrap: break-word;
+			word-break: break-all;
 		}
 	</style>
 
@@ -209,6 +211,7 @@
 						if (rowTw.extended_entities && rowTw.extended_entities.media && rowTw.extended_entities.media.length > 0 && !rowTw.full_text.includes('RT @')) {
 							//debugger
 							rowTw.extended_entities.media.forEach((m, mi) => {
+								add.full_text = add.full_text.replace(m.url, '')
 
 								const sl = m.media_url.split('/')
 								let imageName = `${this.common.URL.TWDATA}${sd.value}/data/tweet${sd.data.isTweet ? '' : 's'}_media/${add.id}-${sl[sl.length - 1]}`
@@ -314,6 +317,7 @@
 						to: '',
 						media: false,
 					}
+					this.search()
 				},
 
 				showMore(){
