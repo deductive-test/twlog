@@ -398,7 +398,7 @@
 								add.entities.urls = rowTw.entities.urls
 								add.entities.urls.forEach((val,i)=>{
 									if (add.full_text.includes(val.url)) {
-										add.full_text = add.full_text.replace(val.url, '')
+										add.full_text = add.full_text.replace('\n' + val.url, '').replace(val.url, '')
 									}
 								})
 							}
