@@ -53,8 +53,8 @@
 
 		<!-- loading, TL count -->
 		<div>
-			<span v-if="loading">loading...  </span>
-			<span>{{page.searched.toLocaleString()}} / {{twData.length.toLocaleString()}}</span>
+			<span v-if="loading">loading... {{loaded}} / {{selectDate.length}} : {{twData.length.toLocaleString()}}</span>
+			<span v-else>{{page.searched.toLocaleString()}} / {{twData.length.toLocaleString()}}</span>
 		</div>
 
 		<!-- TL -->
@@ -109,15 +109,6 @@
 
 	</div>
 
-	<style>
-		[data-debug] p {
-			margin:0;
-			word-wrap: break-word;
-			word-break: break-all;
-		}
-		.psmall {font-size: small;}
-	</style>
-
 	<script src="../js/mixins.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
 	<script src="../js/lib/httpVueLoader@1.4.2.js"></script>
@@ -133,6 +124,7 @@
 				return {
 					loading:true,
 					showInfo: false,
+					loaded: 0,
 
 					input:{
 						target:'',
@@ -162,11 +154,11 @@
 				}
 			},
 			mounted(){
-				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [index] mounted`)
 				this.LoadDataAll()
 			}, // mounted
 			methods: {
 				async LoadDataAll(){
+					this.loaded = 0
 					for (let i = 0; i < this.selectDate.length; i++) {
 
 						try {
@@ -183,6 +175,7 @@
 							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [${i}] error`)
 						}
 
+						this.loaded += 1
 						await this.sleep(10)
 
 					}
@@ -192,13 +185,13 @@
 					this.minFrom = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
 					this.minTo = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
 
-					this.loading = false
-
 					if (!this.NullOrWhiteSpace(location.hash)){
 						$(window).scrollTop($(location.hash).position().top)
 					}
 
 					this.searchInReply()
+
+					this.loading = false
 				},
 
 				searchInReply(i, id, isParent = true){
@@ -256,6 +249,26 @@
 										const urlPath = val.expanded_url.split('/')
 										val.url = '#' + urlPath[urlPath.length - 1]
 										val.expanded_url = val.url
+									}
+									// twlog
+									else if (val.expanded_url.includes('https://deductive-test.github.io/twlog/view/detail.html')){
+										debugger
+										const work = new URL(val.expanded_url)
+										const workQS = Object.fromEntries(work.searchParams)
+										if (workQS.hasOwnProperty('id')){
+											val.url = '#' + workQS.id
+											val.expanded_url = val.url
+										}
+									}
+									// twlog light
+									else if (val.expanded_url.includes('https://deductive-test.github.io/twlog/view/light.html')) {
+										debugger
+										const work = new URL(val.expanded_url)
+										const workQS = Object.fromEntries(work.searchParams)
+										if (!this.NullOrWhiteSpace(workQS.hash)) {
+											val.url = '#' + workQS.hash
+											val.expanded_url = val.url
+										}
 									}
 
 								}
@@ -383,6 +396,18 @@
 			}, // methods
 		})
 	</script>
+
+	<style>
+		* {
+			font-family: "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+		}
+		[data-debug] p {
+			margin:0;
+			word-wrap: break-word;
+			word-break: break-all;
+		}
+		.psmall {font-size: small;}
+	</style>
 </body>
 
 </html>
