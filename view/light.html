@@ -154,6 +154,7 @@
 				}
 			},
 			mounted(){
+				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} mounted: lastModified = ${this.common.lastModified}`)
 				this.LoadDataAll()
 			}, // mounted
 			methods: {
