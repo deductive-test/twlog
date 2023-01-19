@@ -181,29 +181,38 @@
 
 					}
 
+					// sort
+					this.twData = this.twData.sort((a, b) => a.created_at > b.created_at ? -1 : 1)
+
+					// pager
+					this.page.searched = this.twData.length
+					this.twDataShow = this.twData.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
+
 					this.maxFrom = this.FormatDate(this.twData[0].created_at, '-')
 					this.maxTo = this.FormatDate(this.twData[0].created_at, '-')
 					this.minFrom = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
 					this.minTo = this.FormatDate(this.twData[this.twData.length - 1].created_at, '-')
-
-					if (!this.NullOrWhiteSpace(location.hash)){
-						$(window).scrollTop($(location.hash).position().top)
-					}
-
-					this.searchInReply()
-
-					this.loading = false
-				},
-
-				searchInReply(i, id, isParent = true){
+					
+					// index, reply_to_me_id
 					for (let i = 0; i < this.twData.length; i++) {
-						if (this.NullOrWhiteSpace(this.twData[i].in_reply_to_status_id)) continue
-
-						const fi = this.twData.findIndex(x => this.twData[i].in_reply_to_status_id == x.id)
-						if (-1 < fi) {
-							this.twData[fi].reply_to_me_id = this.twData[i].id
+						this.twData[i].index = i
+						
+						if (!this.NullOrWhiteSpace(this.twData[i].in_reply_to_status_id)){
+							const fi = this.twData.findIndex(x => this.twData[i].in_reply_to_status_id == x.id)
+							if (-1 < fi) {
+								this.twData[fi].reply_to_me_id = this.twData[i].id
+							}
 						}
 					}
+
+					// #id scroll
+					if (!this.NullOrWhiteSpace(location.hash)){
+						setTimeout(() => {
+							$(window).scrollTop($(location.hash).position().top)
+						}, 1000);
+					}
+
+					this.loading = false
 				},
 
 				/** read ajax response
@@ -214,9 +223,6 @@
 					// debugger
 					let txt = done.replace(`window.YTD.tweet${sd.data.isTweet ? '' : 's'}.part0 = `, '')
 					let row = JSON.parse(txt)
-
-					// sort
-					row = row.sort((a, b) => new Date(sd.data.isChildTweet ? a.tweet.created_at : a.created_at) > new Date(sd.data.isChildTweet ? b.tweet.created_at : b.created_at) ? -1 : 1)
 
 					for (let i = 0; i < row.length; i++) {
 
@@ -229,7 +235,6 @@
 
 						let add = {}
 						add.id = rowTw.id
-						add.index = this.twData.length
 						add.in_reply_to_status_id = rowTw.in_reply_to_status_id
 
 						// date
@@ -310,7 +315,6 @@
 							})
 						}
 
-
 						// RT, Like
 						add.retweet_count = !isNaN(rowTw.retweet_count) ? Number(rowTw.retweet_count) : 0
 						add.favorite_count = !isNaN(rowTw.favorite_count) ? Number(rowTw.favorite_count) : 0
@@ -320,9 +324,7 @@
 						add.full_text = this.UnescapeHTML(add.full_text)
 						this.twData.push(add)
 					} // for
-
-					this.page.searched = this.twData.length
-					this.twDataShow = this.twData.slice(0, this.page.no * this.page.max < this.twData.length ? this.page.no * this.page.max : this.twData.length)
+					
 				},
 
 				search(isPageAdd){
@@ -411,7 +413,7 @@
 			padding: 5px;
 		}
 		[data-debug] {
-			width: calc(100vw - 10px);
+			/* width: calc(100vw - 10px); */
 		}
 		[data-debug] p {
 			margin:0;
