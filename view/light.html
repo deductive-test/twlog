@@ -63,7 +63,7 @@
 
 			<p class="psmall">{{tw.created_at_str}}  [{{tw.index}}]</p>
 
-			<p style="white-space: pre-wrap; margin: 3px 0;">{{tw.full_text}}</p>
+			<p class="full_text">{{tw.full_text}}</p>
 
 			<template v-if="tw.entities.urls && tw.entities.urls.length > 0">
 				<p v-for="(url,urli) in tw.entities.urls" :key="'url-'+urli">
@@ -406,14 +406,24 @@
 		body{
 			width: 100vw;
 			margin: 0;
+			padding: 0;
 		}
 		#app {
 			padding: 5px;
 		}
+		[data-debug] {
+			width: calc(100vw - 10px);
+		}
 		[data-debug] p {
 			margin:0;
 		}
-		.psmall {font-size: small;}
+		[data-debug] .psmall {
+			font-size: small;
+		}
+		[data-debug] .full_text {
+			white-space: pre-wrap;
+			margin: 3px 0;
+		}
 	</style>
 </body>
 
