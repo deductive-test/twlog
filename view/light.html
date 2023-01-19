@@ -252,7 +252,6 @@
 									}
 									// twlog
 									else if (val.expanded_url.includes('https://deductive-test.github.io/twlog/view/detail.html')){
-										debugger
 										const work = new URL(val.expanded_url)
 										const workQS = Object.fromEntries(work.searchParams)
 										if (workQS.hasOwnProperty('id')){
