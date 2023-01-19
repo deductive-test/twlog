@@ -98,7 +98,7 @@
 				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.showDesc ? '↓' : '↑'}}</a></span>
 				<span v-if="tw.reply_to_me_id"> / <a :href="'#' + tw.reply_to_me_id">{{input.showDesc ? '↑' : '↓'}}</a>
 				</span>
-				<span>  #{{tw.id}}</span>
+				<span> / <a href="javascript:void(0)" @click="copyStr('https://deductive-test.github.io/twlog/view/light.html#' + tw.id)">#{{tw.id}}</a></span>
 			</p>
 
 		</div>

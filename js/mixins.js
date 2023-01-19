@@ -337,6 +337,22 @@ const myMixins = {
 					if (this.isFunction(alwaysFunc)) alwaysFunc(d)
 				})
 		},
+
+		copyStr(copyString){
+			window.getSelection().removeAllRanges();
+			var element = document.createElement("pre");
+			element.id = "copyArea";
+			document.querySelector("body").appendChild(element);
+			document.querySelector("#copyArea").innerHTML = copyString;
+			var range = document.createRange();
+			range.selectNode(document.querySelector("#copyArea"));
+			window.getSelection().addRange(range);
+			var result = document.execCommand("copy");
+			window.getSelection().removeAllRanges();
+			element.parentNode.removeChild(element);
+			console.log("copy: " + result);
+			console.log(copyString);
+		},
 			
 	}, // methods
 }
