@@ -100,7 +100,7 @@
 				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.desc ? '↓' : '↑'}}</a></span>
 				<span v-if="tw.reply_to_me_id"> / <a :href="'#' + tw.reply_to_me_id">{{input.desc ? '↑' : '↓'}}</a>
 				</span>
-				<span> / <a href="javascript:void(0)" @click="copyStr('https://deductive-test.github.io/twlog/view/light.html#' + tw.id)">#{{tw.id}}</a></span>
+				<span> / <a href="javascript:void(0)" @click="copyStr(common.URL.BASE + 'view/light.html#' + tw.id)">#{{tw.id}}</a></span>
 			</p>
 
 		</div>
@@ -217,6 +217,9 @@
 						}
 					}
 
+					this.loading = false
+					console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadDataAll] complete: sec = ${this.FormatDateFromSec(parseInt(((new Date().getTime()) - this.sec) / 1000))}`)
+
 					// #id scroll
 					if (!this.NullOrWhiteSpace(location.hash)){
 						setTimeout(() => {
@@ -224,20 +227,20 @@
 						}, 1000);
 					}
 
-					this.loading = false
-					console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadDataAll] complete: sec = ${this.FormatDateFromSec(parseInt(((new Date().getTime()) - this.sec) / 1000))}`)
-
 					// url query import -> search
-					let hasQS = false
-					for (const key in this.input) {
-						if (this.hasQuery(key)){
-							this.input[key] = this.getQuery(key)
-							hasQS = true
+					else {
+						let hasQS = false
+						for (const key in this.input) {
+							if (this.hasQuery(key)){
+								this.input[key] = this.getQuery(key)
+								hasQS = true
+							}
+						}
+						if (hasQS){
+							this.$nextTick(this.search())
 						}
 					}
-					if (hasQS){
-						this.$nextTick(this.search())
-					}
+
 				},
 
 				FormatDateFromSec(sec) {
