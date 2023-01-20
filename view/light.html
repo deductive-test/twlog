@@ -124,6 +124,7 @@
 				return {
 					loading:true,
 					showInfo: false,
+					sec:0,
 					loaded: 0,
 
 					input:{
@@ -154,11 +155,13 @@
 				}
 			},
 			mounted(){
+				this.sec = (new Date()).getTime()
 				console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} mounted: lastModified = ${this.common.lastModified}`)
 				this.LoadDataAll()
 			}, // mounted
 			methods: {
 				async LoadDataAll(){
+					console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadDataAll] start`)
 					this.loaded = 0
 					for (let i = 0; i < this.selectDate.length; i++) {
 
@@ -213,7 +216,18 @@
 					}
 
 					this.loading = false
+					console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadDataAll] complete: sec = ${this.FormatDateFromSec(parseInt(((new Date().getTime()) - this.sec) / 1000))}`)
 				},
+
+				FormatDateFromSec(sec) {
+
+					let hour = Math.floor(sec / 3600);
+					let min = Math.floor(sec / 3600 % 60);
+					let rem = sec % 60;
+
+					return `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}:${rem.toString().padStart(2, '0')}`
+				},
+		
 
 				/** read ajax response
 				 * @param {object} sd selectDate[i]
