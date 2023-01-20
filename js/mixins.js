@@ -163,7 +163,7 @@ const myMixins = {
 		},
 	},
 	mounted() {
-		console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [myMixins] mounted`)
+		// console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [myMixins] mounted`)
 
 		this.common.lastModified = this.FormatDate(new Date(document.lastModified),'/',true,true)
 	}, // mounted
