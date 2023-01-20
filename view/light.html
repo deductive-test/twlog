@@ -27,7 +27,7 @@
 			from: <input type="date" v-model="input.from" :max="maxFrom" :min="minFrom">
 			to: <input type="date" v-model="input.to" :max="maxTo" :min="minTo">
 			<br>
-			<label><input type="checkbox" v-model="input.showDesc">desc</label>
+			<label><input type="checkbox" v-model="input.desc">desc</label>
 			<label><input type="checkbox" v-model="input.media">media</label>
 			<br>
 			<button @click="search">search</button>
@@ -97,8 +97,8 @@
 
 			<p class="psmall">
 				RT: {{tw.retweet_count}} / Like: {{tw.favorite_count}}
-				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.showDesc ? '↓' : '↑'}}</a></span>
-				<span v-if="tw.reply_to_me_id"> / <a :href="'#' + tw.reply_to_me_id">{{input.showDesc ? '↑' : '↓'}}</a>
+				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.desc ? '↓' : '↑'}}</a></span>
+				<span v-if="tw.reply_to_me_id"> / <a :href="'#' + tw.reply_to_me_id">{{input.desc ? '↑' : '↓'}}</a>
 				</span>
 				<span> / <a href="javascript:void(0)" @click="copyStr('https://deductive-test.github.io/twlog/view/light.html#' + tw.id)">#{{tw.id}}</a></span>
 			</p>
@@ -130,15 +130,22 @@
 					loaded: 0,
 
 					input:{
-						target:'',
-						free:'',
-						showDesc:true,
 						keyword:'',
 						rt:0,
 						like:0,
 						from:'',
 						to:'',
+						desc:true,
 						media:false,
+					},
+					inputDefault: {
+						keyword: '',
+						rt: 0,
+						like: 0,
+						from: '',
+						to: '',
+						desc: true,
+						media: false,
 					},
 
 					minFrom:'2019-01-01',
@@ -219,6 +226,18 @@
 
 					this.loading = false
 					console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [LoadDataAll] complete: sec = ${this.FormatDateFromSec(parseInt(((new Date().getTime()) - this.sec) / 1000))}`)
+
+					// url query import -> search
+					let hasQS = false
+					for (const key in this.input) {
+						if (this.hasQuery(key)){
+							this.input[key] = this.getQuery(key)
+							hasQS = true
+						}
+					}
+					if (hasQS){
+						this.$nextTick(this.search())
+					}
 				},
 
 				FormatDateFromSec(sec) {
@@ -378,7 +397,7 @@
 							res = res.filter(x => x.customImg && x.customImg.length > 0)
 						}
 
-						res = res.sort((a,b)=> this.input.showDesc === true
+						res = res.sort((a,b)=> this.input.desc === true
 							? a.created_at > b.created_at ? -1 : 1
 							: a.created_at > b.created_at ? 1 : -1
 						)
@@ -386,21 +405,26 @@
 					} catch (e) {console.error(e)}
 					this.twDataShow = res.slice(0, this.page.no * this.page.max < res.length ? this.page.no * this.page.max : res.length)
 					this.page.searched = res.length
+
+					// url query
+					if (JSON.stringify(this.input) != JSON.stringify(this.inputDefault)){
+						let qs = {}
+						if (this.input.keyword) qs.keyword = this.input.keyword
+						// TODO
+						// if (this.input.rt > 0) qs.rt = this.input.rt
+						// if (this.input.like > 0) qs.like = this.input.like
+						// if (this.input.from) qs.from = this.input.from
+						// if (this.input.to) qs.to = this.input.to
+						// if (this.input.desc) qs.desc = this.input.desc
+						// if (this.input.media) qs.media = this.input.media
+						history.pushState('','', `${this.common.URL.BASE}view/light.html?${new URLSearchParams(qs)}`)
+					}
+
 					this.loading = false
 				}, // search
 
 				clearSearch() {
-					this.input = {
-						target: '',
-						free: '',
-						showDesc: true,
-						keyword: '',
-						rt: 0,
-						like: 0,
-						from: '',
-						to: '',
-						media: false,
-					}
+					this.input = JSON.parse(JSON.stringify(this.inputDefault))
 					this.search()
 				},
 
