@@ -245,7 +245,7 @@
 						const rowTw = sd.data.isChildTweet ? row[i].tweet : row[i]
 
 						if (-1 < this.twData.findIndex(x => x.id == rowTw.id)){
-							console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} ${sd.value} [${i}] dup skip: ${rowTw.id}`)
+							// console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} ${sd.value} [${i}] dup skip: ${rowTw.id}`)
 							continue
 						}
 
