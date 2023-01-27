@@ -100,7 +100,13 @@
 				<span v-if="tw.in_reply_to_status_id"> / <a :href="'#' + tw.in_reply_to_status_id">{{input.desc ? '↓' : '↑'}}</a></span>
 				<span v-if="tw.reply_to_me_id"> / <a :href="'#' + tw.reply_to_me_id">{{input.desc ? '↑' : '↓'}}</a>
 				</span>
-				<span> / <a href="javascript:void(0)" @click="copyStr(common.URL.BASE + 'view/light.html#' + tw.id)">#{{tw.id}}</a></span>
+
+				<!-- detail -->
+				<span v-if="tw.selectDate && tw.selectDate.value"> / <a :href="`${common.URL.BASE}view/detail.html?target=${tw.selectDate.value}&id=${tw.id}`" target="_blank">#{{tw.id}}</a></span>
+
+				<!-- light copy -->
+				<span v-else data-debug="selectDateError"> / <a :href="`${common.URL.BASE}view/detail.html?target=${tw.selectDate.value}&id=${tw.id}`" target="_blank">#{{tw.id}}</a></span>
+
 			</p>
 
 		</div>
