@@ -19,7 +19,7 @@
 	<div id="app" v-cloak>
 
 		<div>
-			<input type="text" v-model="input.keyword" placeholder="keyword">
+			<input type="text" v-model="input.keyword" placeholder="keyword" @change="search">
 			<br>
 		</div>
 
@@ -48,15 +48,16 @@
 			'v-list':httpVueLoader(`../components/list.vue?_=${(new Date()).getTime()}`),
 		},
 		computed: {
-			isSearch () {
-				let res = false
-				try {
-					res = this.input.keyword && this.input.keyword.length > 0
-				} catch (e) { console.error(e) }
-				return res
-			}, // isSearch
+			// isSearch () {
+			// 	let res = false
+			// 	try {
+			// 		res = this.input.keyword && this.input.keyword.length > 0
+			// 	} catch (e) { console.error(e) }
+			// 	return res
+			// }, // isSearch
 		},
 		data: {
+			isSearch: false,
 			input:{
 				keyword:'',
 			},
@@ -73,6 +74,13 @@
 				this.common.isDebug = !this.common.isDebug
 				}
 			}, // changeDebugMode
+
+			search(){
+				this.isSearch = false
+				if (this.input.keyword && this.input.keyword.length > 0) {
+					this.$nextTick(()=>this.isSearch = true)
+				}
+			}, // search
 		}, // methods
 	})
 	</script>
