@@ -3,7 +3,7 @@
 		<p v-show="false">{{data}}</p>
 
 		<p v-if="loading">loading: {{data.param.value}}</p>
-		<p v-else class="small right">loaded: {{data.param.value}} [{{tw.length}}]</p>
+		<p v-else class="small right">{{data.param.value}} [{{tw.length}}]</p>
 
 		<div v-for="(t) in tw" :key="t.id">
 			<p class="small">{{t.created_at_str}}</p>
@@ -50,12 +50,13 @@ module.exports = {
 					for (let i = 0; i < row.length; i++) {
 						const rowTw = this.data.param.data.isChildTweet ? row[i].tweet : row[i]
 
-						if (!rowTw.full_text.includes(this.data.input.keyword)) continue
+						let add = {}
+						add.full_text = this.UnescapeHTML(rowTw.full_text)
+
+						if (!add.full_text.includes(this.data.input.keyword)) continue
 						
 
-						let add = {}
 						add.id = rowTw.id
-						add.full_text = rowTw.full_text
 						add.created_at = new Date(rowTw.created_at)
 						add.created_at_str = this.FormatDate(add.created_at, '/', true, true)
 
