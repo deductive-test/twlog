@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+	<title>tw log search</title>
+
+	<link rel="shortcut icon" href="../img/favicon.png">
+
+	<style>
+		[v-cloak] {
+			display: none !important;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="app" v-cloak>
+
+		<div>
+			<input type="text" v-model="input.keyword" placeholder="keyword">
+			<br>
+		</div>
+
+		<template v-if="isSearch">
+			<v-list v-for="(l,li) in selectDate" :key="'list-'+li" :data="{input,param:l}"></v-list>
+		</template>
+
+		<div style="text-align: end;">
+			<br><br><br>
+			<button class="debugBtn" style="border: none; color: #fff;" @click="changeDebugMode">{{common.debugCount}}</button>
+		</div>
+		<div v-if="common.isDebug">
+			debug mode
+		</div>
+	</div>
+
+	<script src="../js/mixins.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/jquery@3.x"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+	<script src="../js/lib/httpVueLoader@1.4.2.js"></script>
+	<script>
+	const myvue = new Vue({
+		el: '#app',
+		mixins:[myMixins],
+		components: {
+			'v-list':httpVueLoader(`../components/list.vue?_=${(new Date()).getTime()}`),
+		},
+		computed: {
+			isSearch () {
+				let res = false
+				try {
+					res = this.input.keyword && this.input.keyword.length > 0
+				} catch (e) { console.error(e) }
+				return res
+			}, // isSearch
+		},
+		data: {
+			input:{
+				keyword:'',
+			},
+		}, // data
+		mounted() {
+			console.log(`${(new Date()).toLocaleString()} ${(new Date()).getTime()} [mounted] end`)
+		}, // mounted
+		methods: {
+			/** changeDebugMode */
+			changeDebugMode () {
+				this.common.debugCount++
+				console.log(`debugCount = ${this.common.debugCount}`)
+				if (this.common.debugCount % 10 === 0) {
+				this.common.isDebug = !this.common.isDebug
+				}
+			}, // changeDebugMode
+		}, // methods
+	})
+	</script>
+
+	<style>
+		.debugBtn {
+			background-color: #fff;
+		}
+		.debugBtn:hover,
+		.debugBtn:active {
+			background-color: #eee;
+		}
+
+		p{margin:0;}
+	</style>
+
+</body>
+</html>
