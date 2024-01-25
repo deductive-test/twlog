@@ -8,7 +8,7 @@
 		<div v-for="(t) in tw" :key="t.id">
 			<p class="small">{{t.created_at_str}}</p>
 			<p class="pre">{{t.full_text}}</p>
-			<p class="small"><a href="" target="_blank">#{{t.id}}</a></p>
+			<p class="small"><a :href="`${common.URL.BASE}view/detail.html?target=${data.param.value}&id=${t.id}`" target="_blank">#{{t.id}}</a></p>
 			<hr>
 		</div>
 		
