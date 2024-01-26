@@ -26,6 +26,14 @@ const myMixins = {
 			}, // common
 			selectDate:[
 				{
+					text: '2023-07-27 ~ 2024-01-26',
+					value: '2024-01-26',
+					data: {
+						isTweet: false,
+						isChildTweet: true,
+					},
+				},
+				{
 					text: '2023-01-21 ~ 2023-07-25',
 					value: '2023-07-25',
 					data: {
